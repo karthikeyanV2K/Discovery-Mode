@@ -1,0 +1,12 @@
+A user typed a single word or phrase. Generate EXACTLY 4 different hypotheses about what the user means.
+
+Input: {user_input}
+
+Rules:
+- Output ONLY valid JSON. Nothing before or after the JSON. No markdown. No code examples.
+- The "guess" field: one short sentence about what the user wants.
+- The "reasoning" field: one short sentence explaining why. No code. No examples. Plain text only.
+- Exactly 4 items. IDs must be 1, 2, 3, 4.
+
+Output ONLY this JSON and nothing else:
+{"hypotheses":[{"id":1,"guess":"short guess here","reasoning":"short reason here"},{"id":2,"guess":"short guess here","reasoning":"short reason here"},{"id":3,"guess":"short guess here","reasoning":"short reason here"},{"id":4,"guess":"short guess here","reasoning":"short reason here"}]}

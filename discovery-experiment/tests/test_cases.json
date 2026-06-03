@@ -1,0 +1,22 @@
+[
+  { "test_id": 1, "input": "cv2", "expected_answer": "computer vision", "round": "abbreviations" },
+  { "test_id": 2, "input": "jwt", "expected_answer": "json web token", "round": "abbreviations" },
+  { "test_id": 3, "input": "orm", "expected_answer": "object relational mapper", "round": "abbreviations" },
+  { "test_id": 4, "input": "api", "expected_answer": "application programming interface", "round": "abbreviations" },
+  { "test_id": 5, "input": "sdk", "expected_answer": "software development kit", "round": "abbreviations" },
+  { "test_id": 6, "input": "that python thing for data", "expected_answer": "pandas", "round": "vague_terms" },
+  { "test_id": 7, "input": "the fast database", "expected_answer": "redis", "round": "vague_terms" },
+  { "test_id": 8, "input": "node package manager", "expected_answer": "npm", "round": "vague_terms" },
+  { "test_id": 9, "input": "react state manager", "expected_answer": "redux", "round": "vague_terms" },
+  { "test_id": 10, "input": "python web framework", "expected_answer": "django", "round": "vague_terms" },
+  { "test_id": 11, "input": "what is a callback", "expected_answer": "function passed as argument", "round": "code_concepts" },
+  { "test_id": 12, "input": "what is middleware", "expected_answer": "software between", "round": "code_concepts" },
+  { "test_id": 13, "input": "what is a hook", "expected_answer": "function that lets you use state", "round": "code_concepts" },
+  { "test_id": 14, "input": "what is recursion", "expected_answer": "function calls itself", "round": "code_concepts" },
+  { "test_id": 15, "input": "what is an api endpoint", "expected_answer": "url that accepts requests", "round": "code_concepts" },
+  { "test_id": 16, "input": "bank", "expected_answer": "financial institution", "round": "trick_ambiguous" },
+  { "test_id": 17, "input": "python", "expected_answer": "programming language", "round": "trick_ambiguous" },
+  { "test_id": 18, "input": "apple", "expected_answer": "technology company", "round": "trick_ambiguous" },
+  { "test_id": 19, "input": "spring", "expected_answer": "java framework", "round": "trick_ambiguous" },
+  { "test_id": 20, "input": "swift", "expected_answer": "apple programming language", "round": "trick_ambiguous" }
+]
