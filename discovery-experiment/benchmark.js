@@ -5,10 +5,11 @@ require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const fs = require('fs/promises');
 const path = require('path');
 const promptLoader = require('./src/prompt_loader');
-const standardMode = require('./src/standard_mode');
+const reasoningMode = require('./src/reasoning_mode');
 const discoveryMode = require('./src/discovery_mode');
+const evaluator = require('./src/evaluator');
 
-const DEFAULT_MODEL = process.env.DISCOVERY_MODEL || 'ollama/llama3.2';
+const DEFAULT_MODEL = process.env.DISCOVERY_MODEL || 'ollama-cloud/gpt-oss:120b';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -17,7 +18,7 @@ async function main() {
   const prompts = await promptLoader.loadAll();
   const cases = JSON.parse(await fs.readFile(file, 'utf8'));
 
-  console.log('Hard Discovery Benchmark');
+  console.log('Reasoning vs Discovery Benchmark');
   console.log(`Model: ${model}`);
   console.log(`Cases: ${cases.length}`);
   console.log(`File: ${file}\n`);
@@ -25,83 +26,28 @@ async function main() {
   const rows = [];
 
   for (const testCase of cases) {
-    const [standard, discovery] = await Promise.all([
-      standardMode.run(testCase.prompt, model, prompts),
+    const [reasoning, discovery] = await Promise.all([
+      reasoningMode.run(testCase.prompt, model, prompts),
       discoveryMode.run(testCase.prompt, model, prompts),
     ]);
 
-    const standardEval = evaluateStandard(testCase, standard);
-    const discoveryEval = evaluateDiscovery(testCase, discovery);
-    rows.push({ testCase, standard, discovery, standardEval, discoveryEval });
+    const reasoningEval = evaluator.evaluateReasoning(testCase, reasoning);
+    const discoveryEval = evaluator.evaluateDiscovery(testCase, discovery);
+    rows.push({ testCase, reasoning, discovery, reasoningEval, discoveryEval });
     printCase(rows[rows.length - 1]);
   }
 
   printSummary(rows);
 }
 
-function evaluateStandard(testCase, result) {
-  const answer = result && result.answer ? String(result.answer) : '';
-  const hasAnswer = Boolean(answer.trim());
-  return {
-    score: scoreParts([
-      hasAnswer,
-      includesAll(answer, testCase.must_include),
-      !result.error,
-    ]),
-    hasAnswer,
-    hasMustInclude: includesAll(answer, testCase.must_include),
-    error: result.error ? (result.error.reason || result.error.code || 'error') : null,
-  };
-}
-
-function evaluateDiscovery(testCase, result) {
-  const answer = result && result.final_answer ? String(result.final_answer) : '';
-  const uncertainty = result && result.uncertainty;
-  const hypotheses = result && Array.isArray(result.hypotheses) ? result.hypotheses : [];
-  const validations = result && Array.isArray(result.validations) ? result.validations : [];
-  const domainMatches = !testCase.expected_domain ||
-    (uncertainty && uncertainty.domain === testCase.expected_domain);
-
-  return {
-    score: scoreParts([
-      Boolean(answer.trim()),
-      Boolean(uncertainty && uncertainty.unknowns && uncertainty.unknowns.length),
-      hypotheses.length === 4,
-      validations.length === 4,
-      domainMatches,
-      includesAll(answer, testCase.must_include),
-      !result.error,
-    ]),
-    hasAnswer: Boolean(answer.trim()),
-    hasUncertainty: Boolean(uncertainty && uncertainty.unknowns && uncertainty.unknowns.length),
-    hypothesesCount: hypotheses.length,
-    validationsCount: validations.length,
-    domain: uncertainty ? uncertainty.domain : null,
-    domainMatches,
-    hasMustInclude: includesAll(answer, testCase.must_include),
-    error: result.error ? (result.error.reason || result.error.code || 'error') : null,
-  };
-}
-
-function scoreParts(parts) {
-  const total = parts.length;
-  const passed = parts.filter(Boolean).length;
-  return Math.round((passed / total) * 100);
-}
-
-function includesAll(text, terms) {
-  if (!Array.isArray(terms) || terms.length === 0) return true;
-  const lower = String(text || '').toLowerCase();
-  return terms.every((term) => lower.includes(String(term).toLowerCase()));
-}
-
 function printCase(row) {
-  const { testCase, standardEval, discoveryEval, discovery } = row;
+  const { testCase, reasoningEval, discoveryEval, discovery } = row;
   console.log('------------------------------------------------------------');
   console.log(`${testCase.id} [${testCase.category}]`);
   console.log(testCase.prompt);
-  console.log(`Standard:  ${standardEval.score}%${standardEval.error ? ` error=${standardEval.error}` : ''}`);
-  console.log(`Discovery: ${discoveryEval.score}% domain=${discoveryEval.domain || 'none'} unknowns=${discoveryEval.hasUncertainty ? 'yes' : 'no'} hypotheses=${discoveryEval.hypothesesCount}`);
+  console.log(`Reasoning: ${reasoningEval.score}%${reasoningEval.error ? ` error=${reasoningEval.error}` : ''}`);
+  console.log(`Discovery: ${discoveryEval.score}% domain=${discoveryEval.domain || 'none'} unknowns=${discoveryEval.hasUncertainty ? 'yes' : 'no'} hypotheses=${discoveryEval.hypothesesCount} strategy=${discoveryEval.usedRightStrategy ? 'ok' : 'bad'}`);
+  console.log(`Winner:    ${evaluator.winnerLabel(reasoningEval, discoveryEval)}`);
 
   if (discovery && discovery.uncertainty) {
     console.log(`Discovery unknowns: ${discovery.uncertainty.unknowns.join(' | ')}`);
@@ -116,33 +62,33 @@ function printCase(row) {
 }
 
 function printSummary(rows) {
-  const avgStandard = average(rows.map((row) => row.standardEval.score));
+  const avgReasoning = average(rows.map((row) => row.reasoningEval.score));
   const avgDiscovery = average(rows.map((row) => row.discoveryEval.score));
-  const discoveryWins = rows.filter((row) => row.discoveryEval.score > row.standardEval.score).length;
-  const standardWins = rows.filter((row) => row.standardEval.score > row.discoveryEval.score).length;
-  const ties = rows.length - discoveryWins - standardWins;
+  const discoveryWins = rows.filter((row) => row.discoveryEval.score > row.reasoningEval.score).length;
+  const reasoningWins = rows.filter((row) => row.reasoningEval.score > row.discoveryEval.score).length;
+  const ties = rows.length - discoveryWins - reasoningWins;
 
   console.log('\n============================================================');
   console.log('BENCHMARK SUMMARY');
   console.log('============================================================');
-  console.log(`Average Standard:  ${avgStandard.toFixed(1)}%`);
+  console.log(`Average Reasoning: ${avgReasoning.toFixed(1)}%`);
   console.log(`Average Discovery: ${avgDiscovery.toFixed(1)}%`);
   console.log(`Discovery wins: ${discoveryWins}`);
-  console.log(`Standard wins:  ${standardWins}`);
+  console.log(`Reasoning wins: ${reasoningWins}`);
   console.log(`Ties:           ${ties}`);
 
   const byCategory = new Map();
   for (const row of rows) {
-    const current = byCategory.get(row.testCase.category) || { count: 0, standard: 0, discovery: 0 };
+    const current = byCategory.get(row.testCase.category) || { count: 0, reasoning: 0, discovery: 0 };
     current.count += 1;
-    current.standard += row.standardEval.score;
+    current.reasoning += row.reasoningEval.score;
     current.discovery += row.discoveryEval.score;
     byCategory.set(row.testCase.category, current);
   }
 
   console.log('\nBy category:');
   for (const [category, data] of byCategory.entries()) {
-    console.log(`- ${category}: standard ${(data.standard / data.count).toFixed(1)}%, discovery ${(data.discovery / data.count).toFixed(1)}%`);
+    console.log(`- ${category}: reasoning ${(data.reasoning / data.count).toFixed(1)}%, discovery ${(data.discovery / data.count).toFixed(1)}%`);
   }
 }
 

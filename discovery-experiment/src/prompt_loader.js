@@ -7,12 +7,13 @@ const path = require('path');
  * Loads and validates all prompt template files.
  *
  * @param {string} baseDir - Directory containing prompt files (default: 'prompts')
- * @returns {Promise<{ standard: string, uncertainty: string, hypothesis: string, validate: string }>}
+ * @returns {Promise<{ standard: string, reasoning: string, uncertainty: string, hypothesis: string, validate: string }>}
  * @throws {Error} If any prompt file is missing, empty, or unreadable
  */
 async function loadAll(baseDir = path.join(__dirname, '..', 'prompts')) {
   const files = {
     standard: 'standard.txt',
+    reasoning: 'reasoning.txt',
     uncertainty: 'uncertainty.txt',
     hypothesis: 'hypothesis.txt',
     validate: 'validate.txt',

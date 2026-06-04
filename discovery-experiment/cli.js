@@ -6,12 +6,12 @@ const readline = require('readline');
 const promptLoader = require('./src/prompt_loader');
 const discoveryMode = require('./src/discovery_mode');
 
-const DEFAULT_MODEL = process.env.DISCOVERY_MODEL || 'gemini-free';
+const DEFAULT_MODEL = process.env.DISCOVERY_MODEL || 'ollama-cloud/gpt-oss:120b';
 
 async function main() {
   const args = process.argv.slice(2);
   const model = readOption(args, '--model') || DEFAULT_MODEL;
-  const prompt = readPromptArg(args);
+  const prompt = normalizeDiscoverInput(readPromptArg(args));
   const prompts = await promptLoader.loadAll();
 
   if (prompt) {
@@ -22,7 +22,7 @@ async function main() {
 
   console.log('Discovery Mode CLI');
   console.log(`Model: ${model}`);
-  console.log('Type a prompt. Commands: /exit, /model <id>\n');
+  console.log('Type a prompt. Commands: /discover <prompt>, /exit, /model <id>\n');
 
   let activeModel = model;
   const rl = readline.createInterface({
@@ -53,8 +53,9 @@ async function main() {
     }
 
     try {
-      const result = await discoveryMode.run(input, activeModel, prompts);
-      printDiscoveryResult(input, activeModel, result);
+      const discoverInput = normalizeDiscoverInput(input);
+      const result = await discoveryMode.run(discoverInput, activeModel, prompts);
+      printDiscoveryResult(discoverInput, activeModel, result);
     } catch (err) {
       console.error(`\nDiscovery failed: ${err.message}\n`);
     }
@@ -79,6 +80,17 @@ function readPromptArg(args) {
     filtered.push(args[i]);
   }
   return filtered.join(' ').trim();
+}
+
+function normalizeDiscoverInput(input) {
+  const trimmed = String(input || '').trim();
+  if (trimmed.toLowerCase().startsWith('/discover ')) {
+    return trimmed.slice('/discover '.length).trim();
+  }
+  if (trimmed.toLowerCase() === '/discover') {
+    return '';
+  }
+  return trimmed;
 }
 
 function printDiscoveryResult(input, model, result) {

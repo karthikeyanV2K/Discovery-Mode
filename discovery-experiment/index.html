@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reasoning vs Discovery Benchmark</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      color: #172033;
+      background: #f5f7fb;
+    }
+    header {
+      padding: 22px 28px;
+      background: #ffffff;
+      border-bottom: 1px solid #dce3f1;
+    }
+    h1 { margin: 0 0 6px; font-size: 24px; }
+    .sub { margin: 0; color: #64708a; font-size: 14px; }
+    main { padding: 20px 28px 32px; }
+    .controls {
+      display: grid;
+      grid-template-columns: 220px 180px 1fr auto auto;
+      gap: 12px;
+      align-items: end;
+      padding: 16px;
+      background: #ffffff;
+      border: 1px solid #dce3f1;
+      border-radius: 8px;
+    }
+    label { display: grid; gap: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #4c5870; }
+    select, input {
+      height: 38px;
+      border: 1px solid #c7d0e4;
+      border-radius: 6px;
+      padding: 0 10px;
+      font-size: 14px;
+      background: #fff;
+    }
+    button {
+      height: 38px;
+      border: 0;
+      border-radius: 6px;
+      padding: 0 14px;
+      font-weight: 700;
+      color: #fff;
+      background: #315eea;
+      cursor: pointer;
+    }
+    button.secondary { color: #27406f; background: #e7ecfb; }
+    button:disabled { opacity: .55; cursor: wait; }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .metric, .panel, .case {
+      background: #ffffff;
+      border: 1px solid #dce3f1;
+      border-radius: 8px;
+    }
+    .metric { padding: 14px; }
+    .metric .label { font-size: 12px; color: #64708a; text-transform: uppercase; font-weight: 700; }
+    .metric .value { margin-top: 6px; font-size: 24px; font-weight: 800; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .panel { overflow: hidden; }
+    .panel h2 {
+      margin: 0;
+      padding: 12px 14px;
+      font-size: 14px;
+      text-transform: uppercase;
+      border-bottom: 1px solid #dce3f1;
+    }
+    .panel.reasoning h2 { color: #17633b; }
+    .panel.discovery h2 { color: #4b35b6; }
+    .body { padding: 14px; white-space: pre-wrap; font-size: 14px; line-height: 1.55; }
+    .case { margin-top: 12px; padding: 14px; }
+    .case-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .case-title { font-weight: 800; }
+    .winner {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      background: #eef2ff;
+      color: #315eea;
+    }
+    .scores {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+    .score {
+      padding: 8px;
+      border-radius: 6px;
+      background: #f7f9fd;
+      border: 1px solid #e1e7f4;
+    }
+    .muted { color: #64708a; }
+    .error { color: #b42318; background: #fff1f0; border-color: #ffccc7; }
+    @media (max-width: 980px) {
+      .controls { grid-template-columns: 1fr; }
+      .summary, .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Reasoning Mode vs Discovery Mode</h1>
+    <p class="sub">Same model, same prompt. Reasoning answers directly. Discovery asks unknowns first, selects solve/explore strategy, validates, then answers.</p>
+  </header>
+
+  <main>
+    <section class="controls">
+      <label>Model
+        <select id="model"></select>
+      </label>
+      <label>Benchmark
+        <select id="bench-file">
+          <option value="tech">Tech challenge</option>
+          <option value="mini">Mini hard set</option>
+          <option value="hard">Full hard set</option>
+        </select>
+      </label>
+      <label>Prompt
+        <input id="prompt" value="i need you to create the new ai model unlike traditonal way ok">
+      </label>
+      <button id="run-one">Run Prompt</button>
+      <button class="secondary" id="run-bench">Run Benchmark</button>
+    </section>
+
+    <section class="summary" id="summary"></section>
+
+    <section class="grid">
+      <article class="panel reasoning">
+        <h2>Reasoning Mode</h2>
+        <div class="body" id="reasoning-output">Run a prompt to see the baseline answer.</div>
+      </article>
+      <article class="panel discovery">
+        <h2>Discovery Mode</h2>
+        <div class="body" id="discovery-output">Run a prompt to see uncertainty, strategy, hypotheses, validation, and answer.</div>
+      </article>
+    </section>
+
+    <section id="cases"></section>
+  </main>
+
+  <script>
+    const modelSelect = document.getElementById('model');
+    const promptInput = document.getElementById('prompt');
+    const benchFile = document.getElementById('bench-file');
+    const runOne = document.getElementById('run-one');
+    const runBench = document.getElementById('run-bench');
+    const summary = document.getElementById('summary');
+    const reasoningOutput = document.getElementById('reasoning-output');
+    const discoveryOutput = document.getElementById('discovery-output');
+    const casesEl = document.getElementById('cases');
+
+    init();
+
+    async function init() {
+      const res = await fetch('/api/models');
+      const data = await res.json();
+      modelSelect.innerHTML = data.models.map((m) => `<option value="${escapeHtml(m.id)}">${escapeHtml(m.label)}</option>`).join('');
+      const preferred = data.models.find((m) => m.id === 'ollama-cloud/gpt-oss:120b') ||
+        data.models.find((m) => m.id === 'openai/gpt-5-mini') ||
+        data.models.find((m) => m.id === 'ollama/gpt-oss:120b') ||
+        data.models.find((m) => m.id.includes('ollama'));
+      if (preferred) modelSelect.value = preferred.id;
+      runOne.addEventListener('click', runSinglePrompt);
+      runBench.addEventListener('click', runBenchmark);
+      renderSummary(null);
+    }
+
+    async function runSinglePrompt() {
+      setBusy(true);
+      casesEl.innerHTML = '';
+      reasoningOutput.textContent = 'Running reasoning baseline...';
+      discoveryOutput.textContent = 'Running discovery formula...';
+      try {
+        const res = await postJson('/api/run-comparison', {
+          input: promptInput.value,
+          model: modelSelect.value,
+        });
+        renderSingle(res);
+      } catch (err) {
+        showError(err);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function runBenchmark() {
+      setBusy(true);
+      casesEl.innerHTML = '<div class="case muted">Running benchmark. Cloud APIs may rate-limit; local Ollama is usually steadier.</div>';
+      reasoningOutput.textContent = 'Benchmark running...';
+      discoveryOutput.textContent = 'Benchmark running...';
+      try {
+        const data = await postJson('/api/benchmark-browser', {
+          model: modelSelect.value,
+          file: benchFile.value,
+        });
+        renderSummary(data.summary);
+        renderRows(data.rows);
+        reasoningOutput.textContent = 'Benchmark complete. See case rows below for reasoning scores.';
+        discoveryOutput.textContent = data.summary.expectedWinner;
+      } catch (err) {
+        showError(err);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function renderSingle(data) {
+      renderSummary({
+        avgReasoning: data.reasoningEval.score,
+        avgDiscovery: data.discoveryEval.score,
+        reasoningWins: data.winner === 'reasoning' ? 1 : 0,
+        discoveryWins: data.winner === 'discovery' ? 1 : 0,
+        ties: data.winner === 'tie' ? 1 : 0,
+      });
+      reasoningOutput.textContent = formatReasoning(data);
+      discoveryOutput.textContent = formatDiscovery(data);
+    }
+
+    function renderSummary(data) {
+      const cards = data ? [
+        ['Reasoning avg', `${Math.round(data.avgReasoning)}%`],
+        ['Discovery avg', `${Math.round(data.avgDiscovery)}%`],
+        ['Discovery wins', data.discoveryWins],
+        ['Reasoning wins', data.reasoningWins],
+        ['Ties', data.ties],
+      ] : [
+        ['Reasoning avg', '-'],
+        ['Discovery avg', '-'],
+        ['Discovery wins', '-'],
+        ['Reasoning wins', '-'],
+        ['Ties', '-'],
+      ];
+      summary.innerHTML = cards.map(([label, value]) => `
+        <div class="metric">
+          <div class="label">${escapeHtml(label)}</div>
+          <div class="value">${escapeHtml(String(value))}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderRows(rows) {
+      casesEl.innerHTML = rows.map((row) => `
+        <article class="case">
+          <div class="case-top">
+            <div>
+              <div class="case-title">${escapeHtml(row.testCase.id)} <span class="muted">[${escapeHtml(row.testCase.category)}]</span></div>
+              <div class="muted">${escapeHtml(row.testCase.prompt)}</div>
+            </div>
+            <div class="winner">${escapeHtml(row.winner)}</div>
+          </div>
+          <div class="scores">
+            <div class="score">Reasoning: <strong>${row.reasoningEval.score}%</strong><br><span class="muted">method=${row.reasoningEval.hasMethod ? 'yes' : 'no'} must_include=${row.reasoningEval.hasMustInclude ? 'yes' : 'no'}</span></div>
+            <div class="score">Discovery: <strong>${row.discoveryEval.score}%</strong><br><span class="muted">domain=${escapeHtml(row.discoveryEval.domain || 'none')} strategy=${row.discoveryEval.usedRightStrategy ? 'ok' : 'bad'}</span></div>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function formatReasoning(data) {
+      return [
+        `Score: ${data.reasoningEval.score}%`,
+        `Winner: ${data.winner}`,
+        '',
+        data.reasoning.reasoning || 'Reasoning summary not separated.',
+        '',
+        data.reasoning.answer || data.reasoning.final_answer || '',
+      ].join('\n');
+    }
+
+    function formatDiscovery(data) {
+      const d = data.discovery;
+      const uncertainty = d.uncertainty || {};
+      const hypotheses = (d.hypotheses || []).map((h) => `H${h.id}: ${h.guess}`).join('\n');
+      const validations = (d.validations || []).map((v) => `H${v.id}: score ${v.score} - ${v.evidence || ''}`).join('\n');
+      return [
+        `Score: ${data.discoveryEval.score}%`,
+        `Winner: ${data.winner}`,
+        `Domain: ${uncertainty.domain || 'unknown'}`,
+        `Strategy OK: ${data.discoveryEval.usedRightStrategy ? 'yes' : 'no'}`,
+        '',
+        'Unknowns:',
+        (uncertainty.unknowns || []).map((u) => `- ${u}`).join('\n') || '- none',
+        '',
+        'Strategy:',
+        uncertainty.exploration_strategy || 'none',
+        '',
+        'Hypotheses:',
+        hypotheses || 'none',
+        '',
+        'Validation:',
+        validations || 'none',
+        '',
+        'Final Answer:',
+        d.final_answer || '',
+      ].join('\n');
+    }
+
+    async function postJson(url, payload) {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      return data;
+    }
+
+    function setBusy(busy) {
+      runOne.disabled = busy;
+      runBench.disabled = busy;
+    }
+
+    function showError(err) {
+      reasoningOutput.innerHTML = `<div class="error body">${escapeHtml(err.message)}</div>`;
+      discoveryOutput.innerHTML = `<div class="error body">${escapeHtml(err.message)}</div>`;
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+      }[ch]));
+    }
+  </script>
+</body>
+</html>

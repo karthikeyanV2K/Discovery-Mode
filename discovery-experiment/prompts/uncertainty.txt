@@ -10,6 +10,10 @@ Rules:
 - Do not generate hypotheses yet.
 - Separate certain facts from uncertain parts.
 - If the user asks for a big build, infer the likely target domain and missing architecture details.
+- Identify the default/old pattern that a normal assistant would probably fall into.
+- Decide whether the task needs direct solving, architecture exploration, safety-bounded investigation, or clarification.
+- For creative technical asks, look for a different, faster, more efficient architecture instead of repeating the common template.
+- For defensive security, malware, forensics, APK, and CTF tasks, keep the scope defensive/sandboxed and focus on evidence, triage, and safe analysis.
 
 Output ONLY this JSON:
 {
@@ -29,5 +33,7 @@ Output ONLY this JSON:
   "needs_architecture": false,
   "needs_current_info": false,
   "risk_of_hallucination": "low|medium|high",
-  "exploration_strategy": "how hypotheses should be generated from the unknowns"
+  "default_pattern_to_avoid": "the stale/common answer pattern Discovery should not copy",
+  "strategy_type": "direct_solve|architecture_explore|defensive_analysis|clarify_first",
+  "exploration_strategy": "how hypotheses should be generated from the unknowns, including how to beat the default pattern"
 }

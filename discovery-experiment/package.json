@@ -8,7 +8,10 @@
     "start": "node --use-system-ca cli.js",
     "chat": "node --use-system-ca cli.js",
     "discovery": "node --use-system-ca cli.js",
+    "discover": "node --use-system-ca cli.js",
     "bench": "node --use-system-ca benchmark.js",
+    "bench:mini": "node --use-system-ca benchmark.js --file benchmarks/mini_api_cases.json",
+    "bench:tech": "node --use-system-ca benchmark.js --file benchmarks/tech_challenge_cases.json",
     "server": "node --use-system-ca server.js",
     "test": "vitest --run"
   },

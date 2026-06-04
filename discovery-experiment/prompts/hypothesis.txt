@@ -10,6 +10,15 @@ Rules:
 - Exactly 4 items in the "hypotheses" array. IDs must be 1, 2, 3, 4.
 - Generate hypotheses from the unknowns, ambiguities, constraints, and exploration strategy above.
 - Do not ignore the uncertainty context.
+- H1 should be the best practical path, not the most generic path.
+- H2 should be a different viable architecture or method.
+- H3 should be the default/old pattern a normal assistant might choose, so validation can reject or downgrade it.
+- H4 should be a fast/minimal/safe path, or a direct solver when the task has one correct answer.
+- Do not make "ask for clarification" the strongest hypothesis unless the prompt is impossible or unsafe to answer without it.
+- If details are missing but a bounded useful framework can be given, include assumptions and proceed.
+- Creative technical answers must be anchored to the input. Do not invent a CPU, OS, platform, company, or threat actor unless the input gives it.
+- For direct math/logic tasks, do not invent broad theories; propose deterministic solving and verification methods.
+- For defensive APK malware, forensics, CTF, or cybersecurity tasks, keep every hypothesis within authorized defensive analysis, sandboxing, evidence collection, and reporting.
 - If the input asks for a new AI model unlike traditional AI, H1 must be about a Primitive Reasoning Engine: primitive extraction, symbolic hypotheses, contradiction checks, memory graph, scoring, feedback loop, and optional LLM surface.
 - For that same case, include hypotheses about architecture, reasoning loop, memory, constraints, and non-standard learning.
 - Do not include no-code or prompt-engineering hypotheses unless the input explicitly asks for no-code.

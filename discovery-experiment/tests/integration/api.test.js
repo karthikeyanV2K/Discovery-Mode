@@ -150,12 +150,12 @@ function httpPost(url, payload) {
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe('GET /api/models', () => {
-  it('Test 1 — returns exactly 3 models with required fields', async () => {
+  it('Test 1 — returns exactly 8 models with required fields', async () => {
     const { status, body } = await httpGet(`${baseUrl}/api/models`);
 
     expect(status).toBe(200);
     expect(body).toHaveProperty('models');
-    expect(body.models).toHaveLength(3);
+    expect(body.models).toHaveLength(8);
 
     for (const model of body.models) {
       expect(model).toHaveProperty('id');
@@ -164,9 +164,14 @@ describe('GET /api/models', () => {
     }
 
     const ids = body.models.map((m) => m.id);
+    expect(ids).toContain('openai/gpt-5.1');
+    expect(ids).toContain('openai/gpt-5-mini');
+    expect(ids).toContain('anthropic/claude-sonnet-4.5');
     expect(ids).toContain('groq-free');
     expect(ids).toContain('gemini-free');
+    expect(ids).toContain('ollama-cloud/gpt-oss:120b');
     expect(ids).toContain('ollama/llama3.2');
+    expect(ids).toContain('ollama/gpt-oss:120b');
   });
 
   it('Test 4 — returns correct provider values', async () => {
@@ -175,8 +180,11 @@ describe('GET /api/models', () => {
     expect(status).toBe(200);
     const providers = body.models.map((m) => m.provider);
 
+    expect(providers).toContain('openai');
+    expect(providers).toContain('anthropic');
     expect(providers).toContain('groq');
     expect(providers).toContain('gemini');
+    expect(providers).toContain('ollama-cloud');
     expect(providers).toContain('ollama');
   });
 });

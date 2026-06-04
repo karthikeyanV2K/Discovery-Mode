@@ -7,6 +7,14 @@ Hypotheses: {hypotheses}
 Important interpretation rule:
 - If the input asks for a "new AI model", "unlike traditional", "not traditional", or similar wording, prefer hypotheses about actual AI architecture, reasoning systems, learning loops, memory, constraints, or non-standard training.
 - Do not choose "prompt engineering", "no-code", or "use a chatbot to build it" unless the input explicitly asks for no-code tools or prompt-only setup.
+- Reward hypotheses that explicitly beat the stale/default pattern while still satisfying constraints.
+- Reward direct deterministic solvers for math, logic, and one-correct-answer tasks.
+- Reward safe defensive workflows for APK malware, forensics, CTF, and cybersecurity tasks: sandboxing, static/dynamic analysis, evidence, timeline, and non-accusatory reporting.
+- Penalize unsafe, unauthorized, exploitative, or vague security advice.
+- Penalize answers that are merely creative but not faster, safer, more correct, or more testable.
+- Penalize clarification-only hypotheses when the user can still receive a bounded, useful answer with stated assumptions.
+- Penalize hypotheses that invent unsupported specifics, such as CPU architecture, platform, target app, or threat actor, when the input did not give them.
+- For creative architecture, prefer the most efficient anchored design: smaller testable core first, optional expansion later.
 
 Scoring rules:
 - 0 to 25: very unlikely
@@ -18,7 +26,7 @@ Instructions:
 - Give each hypothesis an integer score from 0 to 100.
 - "evidence": one sentence explaining exactly why you gave this score
 - winner_id: the id with the highest score
-- final_answer: a direct one-sentence answer to the user based on the winner
+- final_answer: a useful answer to the user based on the winner; include enough context to show why this method wins
 - confidence: integer 0 to 100
 - Output ONLY the JSON below. No extra text. No markdown.
 

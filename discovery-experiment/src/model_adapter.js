@@ -18,12 +18,45 @@
  * @returns {Promise<{ success: true, text: string } | { success: false, error: { reason: string, code: string, model?: string } }>}
  */
 
+const OPENAI_ENDPOINT = 'https://api.openai.com/v1/responses';
+const ANTHROPIC_ENDPOINT = 'https://api.anthropic.com/v1/messages';
 const GROQ_ENDPOINT   = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL      = 'llama-3.3-70b-versatile';
+
+const OPENAI_MODELS = {
+  'openai/gpt-5.1': 'gpt-5.1',
+  'openai/gpt-5-mini': 'gpt-5-mini',
+};
+
+const ANTHROPIC_MODELS = {
+  'anthropic/claude-sonnet-4.5': 'claude-sonnet-4-5',
+};
+
+const GROQ_MODELS = {
+  'groq-free': 'llama-3.3-70b-versatile',
+};
 
 const GEMINI_MODEL    = 'gemini-flash-latest';
 
-const SUPPORTED_MODELS = ['groq-free', 'gemini-free', 'ollama/llama3.2'];
+const OLLAMA_MODELS = {
+  'ollama/llama3.2': 'llama3.2',
+  'ollama/gpt-oss:120b': 'gpt-oss:120b',
+};
+
+const OLLAMA_CLOUD_MODELS = {
+  'ollama-cloud/gpt-oss:120b': {
+    directModel: 'gpt-oss:120b',
+    localProxyModel: 'gpt-oss:120b-cloud',
+  },
+};
+
+const SUPPORTED_MODELS = [
+  ...Object.keys(OPENAI_MODELS),
+  ...Object.keys(ANTHROPIC_MODELS),
+  ...Object.keys(GROQ_MODELS),
+  'gemini-free',
+  ...Object.keys(OLLAMA_MODELS),
+  ...Object.keys(OLLAMA_CLOUD_MODELS),
+];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -60,12 +93,18 @@ async function _call(model, prompt, timeoutMs, attempt) {
   try {
     let response;
 
-    if (model === 'groq-free') {
-      response = await callGroq(prompt, controller.signal);
+    if (OPENAI_MODELS[model]) {
+      response = await callOpenAI(prompt, controller.signal, OPENAI_MODELS[model]);
+    } else if (ANTHROPIC_MODELS[model]) {
+      response = await callAnthropic(prompt, controller.signal, ANTHROPIC_MODELS[model]);
+    } else if (GROQ_MODELS[model]) {
+      response = await callGroq(prompt, controller.signal, GROQ_MODELS[model]);
     } else if (model === 'gemini-free') {
       response = await callGemini(prompt, controller.signal);
-    } else if (model === 'ollama/llama3.2') {
-      response = await callOllama(prompt, controller.signal);
+    } else if (OLLAMA_CLOUD_MODELS[model]) {
+      response = await callOllamaCloud(prompt, controller.signal, OLLAMA_CLOUD_MODELS[model]);
+    } else if (OLLAMA_MODELS[model]) {
+      response = await callOllama(prompt, controller.signal, OLLAMA_MODELS[model]);
     }
 
     clearTimeout(timerId);
@@ -125,12 +164,49 @@ async function _call(model, prompt, timeoutMs, attempt) {
   }
 }
 
+async function callOpenAI(prompt, signal, openaiModel) {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  return fetch(OPENAI_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: openaiModel,
+      input: prompt,
+      max_output_tokens: 4096,
+    }),
+    signal,
+  });
+}
+
+async function callAnthropic(prompt, signal, anthropicModel) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  return fetch(ANTHROPIC_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: anthropicModel,
+      max_tokens: 4096,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+    signal,
+  });
+}
+
 /**
  * Groq API — OpenAI-compatible chat completions.
  * Free tier: https://console.groq.com (no credit card)
  * Uses llama-3.1-8b-instant — fast and free.
  */
-async function callGroq(prompt, signal) {
+async function callGroq(prompt, signal, groqModel) {
   const apiKey = process.env.GROQ_API_KEY;
 
   return fetch(GROQ_ENDPOINT, {
@@ -140,7 +216,7 @@ async function callGroq(prompt, signal) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: GROQ_MODEL,
+      model: groqModel,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: 4096,
@@ -179,7 +255,7 @@ async function callGemini(prompt, signal) {
  * Ollama local endpoint — no API key needed.
  * Requires: ollama pull llama3.2
  */
-async function callOllama(prompt, signal) {
+async function callOllama(prompt, signal, ollamaModel) {
   const baseUrl = process.env.OLLAMA_URL || 'http://localhost:11434';
   const endpoint = `${baseUrl}/api/generate`;
 
@@ -189,7 +265,7 @@ async function callOllama(prompt, signal) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama3.2',
+      model: ollamaModel,
       prompt,
       options: {
         num_predict: 4096,
@@ -198,6 +274,30 @@ async function callOllama(prompt, signal) {
     }),
     signal,
   });
+}
+
+async function callOllamaCloud(prompt, signal, cloudModel) {
+  const apiKey = process.env.OLLAMA_API_KEY;
+  if (apiKey) {
+    return fetch('https://ollama.com/api/generate', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: cloudModel.directModel,
+        prompt,
+        options: {
+          num_predict: 4096,
+        },
+        stream: false,
+      }),
+      signal,
+    });
+  }
+
+  return callOllama(prompt, signal, cloudModel.localProxyModel);
 }
 
 /**
@@ -213,6 +313,22 @@ async function callOllama(prompt, signal) {
  *   { response: string }
  */
 function extractText(model, data) {
+  if (OPENAI_MODELS[model]) {
+    if (typeof data.output_text === 'string') return data.output_text;
+    const output = Array.isArray(data.output) ? data.output : [];
+    return output
+      .flatMap((item) => Array.isArray(item.content) ? item.content : [])
+      .filter((item) => item && item.type === 'output_text' && typeof item.text === 'string')
+      .map((item) => item.text)
+      .join('\n');
+  }
+  if (ANTHROPIC_MODELS[model]) {
+    const content = Array.isArray(data.content) ? data.content : [];
+    return content
+      .filter((item) => item && item.type === 'text' && typeof item.text === 'string')
+      .map((item) => item.text)
+      .join('\n');
+  }
   if (model === 'groq-free') {
     return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
   }
@@ -226,10 +342,10 @@ function extractText(model, data) {
       data.candidates[0].content.parts[0].text
     ) || '';
   }
-  if (model === 'ollama/llama3.2') {
+  if (OLLAMA_MODELS[model] || OLLAMA_CLOUD_MODELS[model]) {
     return data.response || '';
   }
   return '';
 }
 
-module.exports = { call };
+module.exports = { call, SUPPORTED_MODELS };

@@ -8,14 +8,18 @@ const fs = require('fs');
 
 const promptLoader = require('./src/prompt_loader');
 const standardMode = require('./src/standard_mode');
+const reasoningMode = require('./src/reasoning_mode');
 const discoveryMode = require('./src/discovery_mode');
 const primitiveDiscoveryMode = require('./src/primitive_discovery_mode');
 const testRunner = require('./src/test_runner');
 const scorecard = require('./src/scorecard');
+const evaluator = require('./src/evaluator');
 
 const app = express();
 
 app.use(express.json());
+app.use('/tests', express.static(path.join(__dirname, 'tests')));
+app.use('/benchmarks', express.static(path.join(__dirname, 'benchmarks')));
 
 // Module-level prompts variable set during startup
 let prompts;
@@ -35,6 +39,83 @@ app.post('/api/run-single', async (req, res) => {
       discoveryMode.run(input, model, prompts),
     ]);
     res.json({ standard, discovery });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/run-comparison
+ * Body: { input: string, model: string, testCase?: object }
+ * Runs Reasoning Mode vs Discovery Mode and returns score details.
+ */
+app.post('/api/run-comparison', async (req, res) => {
+  try {
+    const { input, model, testCase } = req.body;
+    const syntheticCase = testCase || {
+      id: 'custom',
+      category: inferCategory(input),
+      prompt: input,
+      expected_domain: inferExpectedDomain(input),
+      must_include: inferMustInclude(input),
+    };
+
+    const [reasoning, discovery] = await Promise.all([
+      reasoningMode.run(input, model, prompts),
+      discoveryMode.run(input, model, prompts),
+    ]);
+
+    const reasoningEval = evaluator.evaluateReasoning(syntheticCase, reasoning);
+    const discoveryEval = evaluator.evaluateDiscovery(syntheticCase, discovery);
+
+    res.json({
+      testCase: syntheticCase,
+      reasoning,
+      discovery,
+      reasoningEval,
+      discoveryEval,
+      winner: evaluator.winnerLabel(reasoningEval, discoveryEval),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/benchmark-browser
+ * Body: { model: string, file?: "mini" | "hard" }
+ * Runs benchmark cases through Reasoning Mode vs Discovery Mode.
+ */
+app.post('/api/benchmark-browser', async (req, res) => {
+  try {
+    const { model, file } = req.body;
+    const casesFile = file === 'hard'
+      ? 'hard_cases.json'
+      : file === 'tech'
+        ? 'tech_challenge_cases.json'
+        : 'mini_api_cases.json';
+    const casesPath = path.join(__dirname, 'benchmarks', casesFile);
+    const cases = JSON.parse(fs.readFileSync(casesPath, 'utf8'));
+
+    const rows = [];
+    for (const testCase of cases) {
+      const [reasoning, discovery] = await Promise.all([
+        reasoningMode.run(testCase.prompt, model, prompts),
+        discoveryMode.run(testCase.prompt, model, prompts),
+      ]);
+      const reasoningEval = evaluator.evaluateReasoning(testCase, reasoning);
+      const discoveryEval = evaluator.evaluateDiscovery(testCase, discovery);
+      rows.push({
+        testCase,
+        reasoning,
+        discovery,
+        reasoningEval,
+        discoveryEval,
+        winner: evaluator.winnerLabel(reasoningEval, discoveryEval),
+      });
+    }
+
+    res.json({ rows, summary: buildComparisonSummary(rows) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -112,9 +193,14 @@ app.get('/api/models', (req, res) => {
   try {
     res.json({
       models: [
+        { id: 'openai/gpt-5.1', label: 'OpenAI — GPT-5.1 (official)', provider: 'openai' },
+        { id: 'openai/gpt-5-mini', label: 'OpenAI — GPT-5 mini (official)', provider: 'openai' },
+        { id: 'anthropic/claude-sonnet-4.5', label: 'Anthropic — Claude Sonnet 4.5 (official)', provider: 'anthropic' },
         { id: 'groq-free',       label: 'Groq Free — Llama 3.1 8B (cloud)',    provider: 'groq'   },
         { id: 'gemini-free',     label: 'Gemini Free — Gemini 1.5 Flash (cloud)', provider: 'gemini' },
+        { id: 'ollama-cloud/gpt-oss:120b', label: 'Ollama Cloud — GPT-OSS 120B', provider: 'ollama-cloud' },
         { id: 'ollama/llama3.2', label: 'Llama 3.2 (local Ollama)',             provider: 'ollama' },
+        { id: 'ollama/gpt-oss:120b', label: 'GPT-OSS 120B (local Ollama)',      provider: 'ollama' },
       ],
     });
   } catch (err) {
@@ -122,19 +208,70 @@ app.get('/api/models', (req, res) => {
   }
 });
 
+app.get('/api/benchmark-cases', (req, res) => {
+  try {
+    const casesFile = req.query.file === 'hard'
+      ? 'hard_cases.json'
+      : req.query.file === 'tech'
+        ? 'tech_challenge_cases.json'
+        : 'mini_api_cases.json';
+    const casesPath = path.join(__dirname, 'benchmarks', casesFile);
+    res.json({ cases: JSON.parse(fs.readFileSync(casesPath, 'utf8')) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /**
  * GET /
- * The project is CLI-first now. Keep API server root explicit.
+ * Browser comparison harness.
  */
 app.get('/', (req, res) => {
-  res.type('text/plain').send(
-    'Discovery Mode is CLI-first now.\n\n' +
-    'Run:\n' +
-    '  npm run chat\n' +
-    '  npm run discovery -- "your prompt"\n\n' +
-    'API routes are still available for tests and automation.\n'
-  );
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
+
+function buildComparisonSummary(rows) {
+  const avgReasoning = average(rows.map((row) => row.reasoningEval.score));
+  const avgDiscovery = average(rows.map((row) => row.discoveryEval.score));
+  return {
+    avgReasoning,
+    avgDiscovery,
+    discoveryWins: rows.filter((row) => row.winner === 'discovery').length,
+    reasoningWins: rows.filter((row) => row.winner === 'reasoning').length,
+    ties: rows.filter((row) => row.winner === 'tie').length,
+    expectedWinner: 'Discovery should win ambiguous architecture, emotion, and forensics tasks. Reasoning can tie or win direct tasks unless Discovery routes to a deterministic solver first.',
+  };
+}
+
+function average(values) {
+  if (!values.length) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function inferCategory(input) {
+  const lower = String(input || '').toLowerCase();
+  if (/mod|integer|solve|equation|math/.test(lower)) return 'math';
+  if (/ai|model|architecture|kernel|build|create/.test(lower)) return 'architecture';
+  if (/panic|friend|feel|reply|emotion/.test(lower)) return 'emotion';
+  if (/forensic|login|evidence|ctf|cyber|log/.test(lower)) return 'cyber_forensics';
+  return 'custom';
+}
+
+function inferExpectedDomain(input) {
+  const lower = String(input || '').toLowerCase();
+  if (/mod/.test(lower)) return 'math_crt';
+  if (/ai|model|intelligence/.test(lower) && /new|unlike|traditional|traditonal/.test(lower)) return 'ai_architecture';
+  return 'unknown';
+}
+
+function inferMustInclude(input) {
+  const lower = String(input || '').toLowerCase();
+  if (/mod/.test(lower)) return ['23'];
+  if (/ai|model|intelligence/.test(lower) && /new|unlike|traditional|traditonal/.test(lower)) return ['Primitive', 'Reasoning', 'memory'];
+  if (/forensic|login/.test(lower)) return ['evidence', 'timeline'];
+  if (/panic|friend/.test(lower)) return ['wait'];
+  return [];
+}
 
 // ── Startup sequence ──────────────────────────────────────────────────────────
 
