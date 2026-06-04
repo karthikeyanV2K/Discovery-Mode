@@ -1,37 +1,79 @@
 # Discovery Mode
 
-**Structured reasoning for coding agents. One file. Zero dependencies.**
+**Portable `/discover` reasoning mode for coding agents and web chats.**
 
-Add `/discover <task>` to Codex, OpenCode, Antigravity, or ChatGPT/Claude web.  
-The agent replaces its normal response with a structured reasoning chain.
+Discovery Mode prevents an agent from jumping to the most common memorized answer pattern. It forces:
+
+```text
+ANALYSIS -> APPROACHES -> EVALUATION -> FINAL ANSWER
+```
 
 ## Quick Start
 
-```bash
-# Codex
-codex /learn add-file discovery-experiment/discover-agent-modes/lib/discovery_core.md
+### Portable plugin pack
 
-# Then type:
+```text
+discovery-experiment/portable-plugin-pack/
+```
+
+### Codex plugin package
+
+```text
+discovery-experiment/plugins/discovery-mode/
+```
+
+### Real local engine
+
+```powershell
+npm.cmd --prefix X:\Toh\discovery-experiment run discover -- --model ollama-cloud/gpt-oss:120b "/discover design a minimal kernel architecture"
+```
+
+### Codex
+
+This Codex CLI does **not** support the old slash-learn add-file style command.
+
+Use:
+
+```text
+discovery-experiment/AGENTS.md
+```
+
+or paste:
+
+```text
+discovery-experiment/discover-agent-modes/lib/discovery_core.md
+```
+
+into the session.
+
+### OpenCode
+
+```bash
+mkdir -p .opencode/rules
+cp discovery-experiment/discover-agent-modes/lib/discovery_core.md .opencode/rules/discovery-mode.md
+```
+
+### Antigravity
+
+Paste this file into custom instructions:
+
+```text
+discovery-experiment/discover-agent-modes/lib/discovery_core.md
+```
+
+### ChatGPT / Claude Web
+
+Paste this file into chat:
+
+```text
+discovery-experiment/DISCOVER_WEB_ACTIVATION.md
+```
+
+Then type:
+
+```text
 /discover design a minimal kernel architecture
 ```
-
-The output shows 4 phases:
-
-```
-ANALYSIS     →  What do I know? What's missing? What constraints exist?
-APPROACHES   →  4 alternative approaches from first principles
-EVALUATION   →  Score each 0-100, select the strongest
-FINAL ANSWER →  Complete response with full reasoning chain
-```
-
-## Install
-
-| Agent | Command |
-|---|---|
-| **Codex** | `codex /learn add-file discover-agent-modes/lib/discovery_core.md` |
-| **OpenCode** | `cp discover-agent-modes/lib/discovery_core.md .opencode/rules/discovery-mode.md` |
-| **Antigravity** | Paste `discover-agent-modes/lib/discovery_core.md` into custom instructions |
-| **ChatGPT / Claude** | Paste `discovery-experiment/DISCOVER_WEB_ACTIVATION.md` into chat |
 
 ## Validate
 
@@ -40,21 +82,20 @@ node discovery-experiment/discover-agent-modes/reality_test.js --all
 node discovery-experiment/discover-agent-modes/reality_test.js --check response.txt
 ```
 
-## Why
-
-Normal agents jump to the most common memorized response pattern.  
-Discovery Mode forces careful analysis before answering — especially useful for unknown or complex topics.
-
 ## Project Structure
 
-```
+```text
 discovery-experiment/
-├── discover-agent-modes/
-│   ├── lib/discovery_core.md        ← Canonical protocol
-│   ├── codex-discovery-mode.md      ← Codex wrapper
-│   ├── opencode-discovery-mode.md   ← OpenCode wrapper
-│   ├── antigravity-discovery-mode.md← Antigravity wrapper
-│   └── reality_test.js              ← Validation tool
-├── DISCOVER_AGENT_PLUGIN.md         ← Unified docs
-├── DISCOVER_WEB_ACTIVATION.md       ← Web activation prompt
-└── HOW_TO_USE_AND_PUBLISH.md        ← Full guide
+  AGENTS.md
+  plugins/discovery-mode/
+  portable-plugin-pack/
+  DISCOVER_AGENT_PLUGIN.md
+  DISCOVER_WEB_ACTIVATION.md
+  HOW_TO_USE_AND_PUBLISH.md
+  discover-agent-modes/
+    lib/discovery_core.md
+    codex-discovery-mode.md
+    opencode-discovery-mode.md
+    antigravity-discovery-mode.md
+    reality_test.js
+```

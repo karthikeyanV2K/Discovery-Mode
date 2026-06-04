@@ -227,7 +227,15 @@ app.get('/api/benchmark-cases', (req, res) => {
  * Browser comparison harness.
  */
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.type('text/plain').send(
+    'Discovery Mode is packaged as a portable plugin pack now.\n\n' +
+    'Use:\n' +
+    '  portable-plugin-pack/README.md\n' +
+    '  plugins/discovery-mode/\n' +
+    '  DISCOVER_WEB_ACTIVATION.md\n\n' +
+    'CLI engine:\n' +
+    '  npm run discover -- "/discover your prompt"\n'
+  );
 });
 
 function buildComparisonSummary(rows) {

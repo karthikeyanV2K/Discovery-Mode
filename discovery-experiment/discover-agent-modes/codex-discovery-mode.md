@@ -1,56 +1,68 @@
-# Codex × Discovery Mode
+# Codex x Discovery Mode
 
 ## Overview
-Adds the `/discover` command to Codex. When invoked, Codex replaces its standard response with a structured reasoning process defined in the Discovery Mode protocol.
 
-No external dependencies. No API calls. Pure instruction-driven behavior.
+Adds `/discover` behavior to Codex for this project.
 
-## Installation
+When invoked, Codex replaces its normal response with the structured Discovery Mode protocol.
 
-```bash
-codex /learn add-file discover-agent-modes/lib/discovery_core.md
+## Important
+
+This installed Codex CLI does not support the old slash-learn add-file style command.
+
+Use one of the real paths below.
+
+## Path 1: Project Instructions
+
+Keep this file in the project:
+
+```text
+AGENTS.md
 ```
 
-Or copy this file to:
-```
-~/.codex/rules/discovery-mode.md
-```
+It tells Codex to use the canonical protocol:
 
-## Behavior
-
-When the user writes:
-```
-/discover <task>
-```
-Codex executes the **Discovery Mode protocol** (see `lib/discovery_core.md`):
-
-1. **ANALYSIS** — known facts, unknowns, constraints, strategy
-2. **APPROACHES** — 4 alternative approaches (H1 primary, H2 alternative, H3 default pattern, H4 minimal/safe)
-3. **EVALUATION** — score each 0–100, select winner
-4. **FINAL ANSWER** — complete response with reasoning chain visible
-
-When `/discover` is not present, Codex answers normally.
-
-## Output Format
-
-```
-ANALYSIS:
-[known/unknown/constraints/strategy]
-
-APPROACHES:
-[H1-H4 with descriptions and rationale]
-
-EVALUATION:
-[scores with evidence, selection]
-
-FINAL ANSWER:
-[complete answer with reasoning chain]
+```text
+discover-agent-modes/lib/discovery_core.md
 ```
 
-## Verification
+Then ask Codex:
 
-```
+```text
 /discover design a minimal kernel architecture
 ```
 
-Expected: staged architecture trace (boot → loader → CPU → core → drivers → shell), not a one-line answer.
+## Path 2: Manual Session Activation
+
+Paste the contents of:
+
+```text
+discover-agent-modes/lib/discovery_core.md
+```
+
+into the Codex session, then use:
+
+```text
+/discover design a minimal kernel architecture
+```
+
+## Path 3: Local CLI Engine
+
+Run the real Discovery engine:
+
+```powershell
+npm.cmd --prefix X:\Toh\discovery-experiment run discover -- --model ollama-cloud/gpt-oss:120b "/discover design a minimal kernel architecture"
+```
+
+## Expected Output
+
+Codex should return:
+
+```text
+ANALYSIS
+APPROACHES
+EVALUATION
+FINAL ANSWER
+```
+
+Expected behavior: staged architecture trace such as `boot -> loader -> CPU -> core -> drivers -> shell`, not a one-line answer.

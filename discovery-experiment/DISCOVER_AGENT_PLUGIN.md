@@ -1,58 +1,63 @@
-# Discovery Mode — Agent Plugin
+# Discovery Mode Agent Plugin
 
-Adds `/discover` to your coding agent. Zero dependencies. No npm. No API calls. Pure instruction.
+Adds `/discover` to coding agents through one canonical protocol file.
+
+The canonical protocol is:
+
+```text
+discover-agent-modes/lib/discovery_core.md
+```
+
+The packaged plugin files are:
+
+```text
+plugins/discovery-mode/
+portable-plugin-pack/
+```
 
 ## How It Works
 
-Install one file into your agent. When you type `/discover <task>`, the agent replaces its normal response with a structured reasoning chain:
+When the user writes:
 
-```
-ANALYSIS     →  What do I know? What's missing? What constraints exist?
-APPROACHES   →  4 alternative approaches (primary, alternative, default, minimal)
-EVALUATION   →  Score each 0-100, select the strongest
-FINAL ANSWER →  Complete response with reasoning chain visible
+```text
+/discover <task>
 ```
 
-This prevents the agent from jumping to the most memorized pattern when a careful analysis is needed.
+the agent should produce:
 
-## Plugin Files
-
-All plugins reference the same canonical protocol at `lib/discovery_core.md`.
-
-| Agent | File | Install |
-|---|---|---|
-| **Codex** | `discover-agent-modes/codex-discovery-mode.md` | `codex /learn add-file discover-agent-modes/lib/discovery_core.md` |
-| **OpenCode** | `discover-agent-modes/opencode-discovery-mode.md` | `cp lib/discovery_core.md .opencode/rules/` |
-| **Antigravity** | `discover-agent-modes/antigravity-discovery-mode.md` | Paste `lib/discovery_core.md` into custom instructions |
-| **ChatGPT / Claude Web** | `DISCOVER_WEB_ACTIVATION.md` | Paste activation prompt into chat |
-
-## Quick Start
-
-```bash
-# Codex
-codex /learn add-file discover-agent-modes/lib/discovery_core.md
-
-# Then test
-/discover design a minimal kernel architecture
+```text
+ANALYSIS
+APPROACHES
+EVALUATION
+FINAL ANSWER
 ```
 
-Expected output: 4-phase trace (ANALYSIS → APPROACHES → EVALUATION → FINAL ANSWER).
+## Bring It To Each Agent
+
+| Agent | Real Integration Path |
+|---|---|
+| Codex | Install/use `plugins/discovery-mode/`, use project `AGENTS.md`, or paste `discover-agent-modes/lib/discovery_core.md` into the session |
+| OpenCode | Copy `portable-plugin-pack/opencode/discovery-mode.md` into `.opencode/rules/discovery-mode.md` |
+| Antigravity | Paste `portable-plugin-pack/antigravity/discovery-mode.md` into custom instructions |
+| ChatGPT / Claude Web | Paste `portable-plugin-pack/browser/discover-web-activation.md` into chat |
+
+## Codex Note
+
+This Codex CLI does not support the old slash-learn add-file style command.
+
+Use `AGENTS.md`, manual paste, or the local CLI engine.
+
+## Local CLI Engine
+
+For repeatable runs:
+
+```powershell
+npm.cmd --prefix X:\Toh\discovery-experiment run discover -- --model ollama-cloud/gpt-oss:120b "/discover design a minimal kernel architecture"
+```
 
 ## Validate
 
 ```bash
 node discover-agent-modes/reality_test.js --all
-# Save agent output to response.txt, then:
 node discover-agent-modes/reality_test.js --check response.txt
 ```
-
-## Structure
-
-```
-discover-agent-modes/
-├── lib/
-│   └── discovery_core.md        ← Canonical protocol (all agents reference this)
-├── codex-discovery-mode.md      ← Codex wrapper
-├── opencode-discovery-mode.md   ← OpenCode wrapper
-├── antigravity-discovery-mode.md← Antigravity wrapper
-└── reality_test.js              ← Validation tool
