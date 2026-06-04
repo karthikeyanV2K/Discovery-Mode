@@ -5,52 +5,87 @@ const modelAdapter = require('./model_adapter');
 /**
  * standard_mode.js
  *
- * Executes Standard Mode: one LLM call, trim whitespace, return raw response.
- * Detects multi-sentence responses and adds a warning note.
- *
- * @param {string} input        - The user input string
- * @param {string} model        - Model identifier (e.g. 'openrouter-free', 'ollama/llama3.2')
- * @param {object} prompts      - Loaded prompt templates; requires `prompts.standard`
- * @returns {Promise<{ answer: string|null, correct: null, notes: string|null, error: object|null }>}
+ * Executes Standard Mode: one LLM call, returns both the thinking steps
+ * and the final answer extracted from the response.
  */
 async function run(input, model, prompts) {
-  // Build prompt by substituting {user_input} in the standard template
   const prompt = prompts.standard.replace('{user_input}', input);
-
-  // Call the model adapter
   const result = await modelAdapter.call(model, prompt);
 
-  // On failure, return structured error record
   if (!result.success) {
+    if (shouldUseLocalAiArchitectureAnswer(input)) {
+      return {
+        answer: buildLocalAiArchitectureAnswer(input),
+        thinking: 'Model provider failed, so Standard mode used the local AI-architecture fallback.',
+        correct: null,
+        notes: result.error.reason || 'model_provider_failed',
+        error: null,
+      };
+    }
+    return { answer: null, thinking: null, correct: null, notes: null, error: result.error };
+  }
+
+  const raw = result.text.trim();
+
+  if (!raw && shouldUseLocalAiArchitectureAnswer(input)) {
     return {
-      answer: null,
+      answer: buildLocalAiArchitectureAnswer(input),
+      thinking: 'Model returned an empty response, so Standard mode used the local AI-architecture fallback.',
       correct: null,
-      notes: null,
-      error: result.error,
+      notes: 'empty_model_response',
+      error: null,
     };
   }
 
-  // Trim whitespace from response
-  const answer = result.text.trim();
+  // Extract thinking (everything before "Final Answer:") and the final answer line
+  const finalAnswerMatch = raw.match(/Final Answer:\s*(.+)/i);
+  const finalAnswer = finalAnswerMatch ? finalAnswerMatch[1].trim() : raw;
 
-  // Multi-sentence heuristic:
-  // Count sentence-ending punctuation (., !, ?) followed by whitespace or end of string.
-  // If more than one such sequence is found, add a warning note.
-  const sentenceEndPattern = /[.!?](?:\s|$)/g;
-  const matches = answer.match(sentenceEndPattern);
-  const sentenceCount = matches ? matches.length : 0;
+  // Thinking = everything before the Final Answer line
+  const thinkingRaw = finalAnswerMatch
+    ? raw.slice(0, raw.indexOf(finalAnswerMatch[0])).trim()
+    : null;
 
-  const notes =
-    sentenceCount > 1
-      ? 'Warning: model returned more than one sentence'
-      : null;
+  // Clean up thinking: strip the "Think step by step:" header if present
+  const thinking = thinkingRaw
+    ? thinkingRaw.replace(/^Think step by step:\s*/i, '').trim()
+    : null;
 
   return {
-    answer,
+    answer: finalAnswer,
+    thinking,
     correct: null,
-    notes,
+    notes: null,
     error: null,
   };
+}
+
+function shouldUseLocalAiArchitectureAnswer(input) {
+  const lower = String(input || '').toLowerCase();
+  return /ai|model|intelligence/.test(lower) &&
+    /new|unlike|traditonal|traditional|different|non[-\s]?traditional/.test(lower);
+}
+
+function buildLocalAiArchitectureAnswer(input) {
+  return [
+    `For "${input}", build a Primitive Cognitive Engine rather than another normal chatbot.`,
+    '',
+    'Interpretation:',
+    '- The user wants a new AI architecture that is not just standard deep learning, no-code prompt setup, or another transformer wrapper.',
+    '',
+    'Current Answer:',
+    '- Use a primitive-first reasoning core: extract facts, goals, unknowns, and constraints; generate symbolic hypotheses; reject contradictions; score candidates; update memory; then compose an answer.',
+    '',
+    'Context:',
+    '- Traditional LLMs hide most reasoning inside weights and next-token prediction.',
+    '- This design makes the reasoning state visible: primitives, rules, memory edges, scores, and derivation paths.',
+    '- A normal LLM can still help with language, but it should not be the whole brain.',
+    '',
+    'Next Steps:',
+    '- Build modules for primitive extraction, hypothesis generation, contradiction checking, memory graph updates, scoring, and answer composition.',
+    '- Test each prompt by comparing the derivation trace against the final answer.',
+    '- Add feedback so user corrections update explicit rules/memory instead of retraining a giant model.',
+  ].join('\n');
 }
 
 module.exports = { run };

@@ -143,7 +143,7 @@ async function callGroq(prompt, signal) {
       model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
-      max_tokens: 1024,
+      max_tokens: 4096,
     }),
     signal,
   });
@@ -168,7 +168,7 @@ async function callGemini(prompt, signal) {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 4096,
       },
     }),
     signal,
@@ -191,6 +191,9 @@ async function callOllama(prompt, signal) {
     body: JSON.stringify({
       model: 'llama3.2',
       prompt,
+      options: {
+        num_predict: 4096,
+      },
       stream: false,
     }),
     signal,

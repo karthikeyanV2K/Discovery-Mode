@@ -17,6 +17,7 @@ import http from 'node:http';
 vi.mock('../../src/prompt_loader', () => ({
   loadAll: async () => ({
     standard: 'Standard prompt: {user_input}',
+    uncertainty: 'Uncertainty prompt: {user_input}',
     hypothesis: 'Hypothesis prompt: {user_input}',
     validate: 'Validate prompt: {user_input} {hypotheses}',
   }),

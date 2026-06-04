@@ -9,13 +9,13 @@ const fs = require('fs');
 const promptLoader = require('./src/prompt_loader');
 const standardMode = require('./src/standard_mode');
 const discoveryMode = require('./src/discovery_mode');
+const primitiveDiscoveryMode = require('./src/primitive_discovery_mode');
 const testRunner = require('./src/test_runner');
 const scorecard = require('./src/scorecard');
 
 const app = express();
 
 app.use(express.json());
-app.use(express.static(__dirname));
 
 // Module-level prompts variable set during startup
 let prompts;
@@ -35,6 +35,40 @@ app.post('/api/run-single', async (req, res) => {
       discoveryMode.run(input, model, prompts),
     ]);
     res.json({ standard, discovery });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/run-three
+ * Body: { input: string, model: string }
+ * Runs all three modes: standard, discovery, and primitive discovery
+ */
+app.post('/api/run-three', async (req, res) => {
+  try {
+    const { input, model } = req.body;
+    const [standard, discovery, primitiveDiscovery] = await Promise.all([
+      standardMode.run(input, model, prompts),
+      discoveryMode.run(input, model, prompts),
+      primitiveDiscoveryMode.run(input, model, prompts),
+    ]);
+    res.json({ standard, discovery, primitiveDiscovery });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/run-primitive
+ * Body: { input: string, model: string }
+ * Runs only primitive discovery mode
+ */
+app.post('/api/run-primitive', async (req, res) => {
+  try {
+    const { input, model } = req.body;
+    const result = await primitiveDiscoveryMode.run(input, model, prompts);
+    res.json({ primitiveDiscovery: result });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -90,14 +124,16 @@ app.get('/api/models', (req, res) => {
 
 /**
  * GET /
- * Serve the main index.html.
+ * The project is CLI-first now. Keep API server root explicit.
  */
 app.get('/', (req, res) => {
-  try {
-    res.sendFile(path.join(__dirname, 'index.html'));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  res.type('text/plain').send(
+    'Discovery Mode is CLI-first now.\n\n' +
+    'Run:\n' +
+    '  npm run chat\n' +
+    '  npm run discovery -- "your prompt"\n\n' +
+    'API routes are still available for tests and automation.\n'
+  );
 });
 
 // ── Startup sequence ──────────────────────────────────────────────────────────

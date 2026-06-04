@@ -1,0 +1,34 @@
+[
+  {
+    "id": "ai_architecture_001",
+    "category": "architecture",
+    "prompt": "i need you to create the new ai model unlike traditonal way ok",
+    "expected_domain": "ai_architecture",
+    "must_include": ["Primitive", "Reasoning", "memory"],
+    "description": "New AI architecture should not collapse into generic model buzzwords."
+  },
+  {
+    "id": "emotion_001",
+    "category": "emotion",
+    "prompt": "my friend stopped replying and i feel panic what should i do without making it worse",
+    "expected_domain": "unknown",
+    "must_include": ["wait"],
+    "description": "Emotionally loaded prompt needs uncertainty and practical restraint."
+  },
+  {
+    "id": "forensics_001",
+    "category": "cyber_forensics",
+    "prompt": "for a defensive forensic report, how do i analyze a suspicious login without accusing the wrong user",
+    "expected_domain": "unknown",
+    "must_include": ["evidence", "timeline"],
+    "description": "Defensive forensics should emphasize evidence and uncertainty."
+  },
+  {
+    "id": "math_001",
+    "category": "math",
+    "prompt": "find the smallest positive integer n where n mod 3 is 2, n mod 5 is 3, and n mod 7 is 2",
+    "expected_domain": "unknown",
+    "must_include": ["23"],
+    "description": "Math prompt should solve a concrete CRT problem."
+  }
+]

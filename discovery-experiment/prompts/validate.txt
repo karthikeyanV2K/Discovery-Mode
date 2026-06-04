@@ -1,8 +1,12 @@
-You are given a user input and 4 hypotheses. Score each hypothesis 0-100 and pick a winner.
+You are given a user input and 4 hypotheses. Score each hypothesis and pick a winner.
 
 Input: {user_input}
 
 Hypotheses: {hypotheses}
+
+Important interpretation rule:
+- If the input asks for a "new AI model", "unlike traditional", "not traditional", or similar wording, prefer hypotheses about actual AI architecture, reasoning systems, learning loops, memory, constraints, or non-standard training.
+- Do not choose "prompt engineering", "no-code", or "use a chatbot to build it" unless the input explicitly asks for no-code tools or prompt-only setup.
 
 Scoring rules:
 - 0 to 25: very unlikely
@@ -12,17 +16,18 @@ Scoring rules:
 
 Instructions:
 - Give each hypothesis an integer score from 0 to 100.
-- winner_id must be the id of the highest scoring hypothesis.
-- final_answer must be a direct one-sentence answer to the user based on the winner.
-- confidence must be an integer from 0 to 100.
-- Output ONLY the JSON below. No extra text before or after. No markdown fences.
+- "evidence": one sentence explaining exactly why you gave this score
+- winner_id: the id with the highest score
+- final_answer: a direct one-sentence answer to the user based on the winner
+- confidence: integer 0 to 100
+- Output ONLY the JSON below. No extra text. No markdown.
 
 {
   "validations": [
-    {"id": 1, "score": 0, "evidence": "short reason", "valid": false},
-    {"id": 2, "score": 0, "evidence": "short reason", "valid": false},
-    {"id": 3, "score": 0, "evidence": "short reason", "valid": false},
-    {"id": 4, "score": 0, "evidence": "short reason", "valid": false}
+    {"id": 1, "score": 0, "evidence": "reason for this score", "valid": false},
+    {"id": 2, "score": 0, "evidence": "reason for this score", "valid": false},
+    {"id": 3, "score": 0, "evidence": "reason for this score", "valid": false},
+    {"id": 4, "score": 0, "evidence": "reason for this score", "valid": false}
   ],
   "winner_id": 1,
   "final_answer": "your direct answer here",

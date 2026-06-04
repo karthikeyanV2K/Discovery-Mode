@@ -5,7 +5,11 @@
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node --use-system-ca server.js",
+    "start": "node --use-system-ca cli.js",
+    "chat": "node --use-system-ca cli.js",
+    "discovery": "node --use-system-ca cli.js",
+    "bench": "node --use-system-ca benchmark.js",
+    "server": "node --use-system-ca server.js",
     "test": "vitest --run"
   },
   "dependencies": {
