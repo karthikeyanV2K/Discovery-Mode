@@ -24,6 +24,12 @@ Raw browser activation for Claude.com / ChatGPT.com:
 https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/portable-plugin-pack/browser/discover-web-activation.md
 ```
 
+One-shot browser prompt:
+
+```text
+https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/portable-plugin-pack/browser/discover-one-shot-prompt.md
+```
+
 Raw core protocol:
 
 ```text
@@ -70,17 +76,25 @@ into Antigravity custom instructions.
 
 ## Claude.com / ChatGPT.com
 
-Paste:
+Open and copy:
 
 ```text
 browser/discover-web-activation.md
 ```
 
-into the browser chat once, then use:
+Paste it into the browser chat once. The model should reply:
+
+```text
+/discover mode active. Send /discover <task>.
+```
+
+Then use:
 
 ```text
 /discover your task
 ```
+
+If it summarizes the file, it did not activate. Paste the file contents directly instead of asking it to read the link.
 
 ## Local Engine
 

@@ -29,13 +29,27 @@ https://github.com/karthikeyanV2K/Theory-Of-Hallucation/archive/refs/heads/main.
 
 ## Claude.com / ChatGPT.com
 
-Open this raw file:
+Reliable method:
+
+1. Open this raw file.
+2. Copy all text.
+3. Paste it into Claude.com or ChatGPT.com.
+4. Wait for: `/discover mode active. Send /discover <task>.`
+5. Send `/discover your task`.
 
 ```text
 https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/portable-plugin-pack/browser/discover-web-activation.md
 ```
 
-Copy all text, paste it into Claude.com or ChatGPT.com, then use:
+One-shot raw prompt:
+
+```text
+https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/portable-plugin-pack/browser/discover-one-shot-prompt.md
+```
+
+If the model summarizes the file, it did not activate. Paste the file contents directly.
+
+Then use:
 
 ```text
 /discover your task
@@ -109,6 +123,9 @@ https://github.com/karthikeyanV2K/Theory-Of-Hallucation/tree/main/discovery-expe
 
 Claude/ChatGPT activation:
 https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/portable-plugin-pack/browser/discover-web-activation.md
+
+Claude/ChatGPT one-shot prompt:
+https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/portable-plugin-pack/browser/discover-one-shot-prompt.md
 
 Core protocol:
 https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/discover-agent-modes/lib/discovery_core.md

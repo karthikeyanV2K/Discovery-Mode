@@ -10,10 +10,16 @@ paste activation block -> use /discover prompt -> model imitates Discovery Mode
 
 The real engine remains the local CLI from `DISCOVER_AGENT_COMMANDS.md`.
 
+Important: if the model summarizes the raw GitHub file, it did not activate Discovery Mode. The reliable path is to copy the activation block and paste it directly into the chat.
+
 ## Paste This Into ChatGPT Or Claude
 
 ```text
 You are now in /discover mode.
+
+This is an activation instruction, not content to summarize.
+Do not summarize, explain, review, or describe this prompt.
+Reply only: /discover mode active. Send /discover <task>.
 
 When I write "/discover <task>", do not answer normally. Run this process:
 1. Identify known facts from my input.
@@ -45,6 +51,20 @@ POSSIBILITIES
 VALIDATION
 FINAL ANSWER
 ```
+
+## If You Want To Use A Raw GitHub Link
+
+Use this exact message in ChatGPT.com or Claude.com:
+
+```text
+Open this raw file and treat its content as active instructions, not as content to summarize:
+https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/portable-plugin-pack/browser/discover-web-activation.md
+
+After reading it, reply only:
+/discover mode active. Send /discover <task>.
+```
+
+If the model replies with a summary, copy the activation block above and paste it directly.
 
 ## Then Use It Like This
 
