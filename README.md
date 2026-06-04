@@ -10,6 +10,26 @@ ANALYSIS -> APPROACHES -> EVALUATION -> FINAL ANSWER
 
 ## Quick Start
 
+### Install from GitHub
+
+Full install/download guide:
+
+```text
+discovery-experiment/INSTALL_FROM_GITHUB.md
+```
+
+Main repo:
+
+```text
+https://github.com/karthikeyanV2K/Theory-Of-Hallucation
+```
+
+Claude/ChatGPT browser activation raw link:
+
+```text
+https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/portable-plugin-pack/browser/discover-web-activation.md
+```
+
 ### Portable plugin pack
 
 ```text

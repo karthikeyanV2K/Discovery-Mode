@@ -10,6 +10,26 @@ It contains plain files that bring `/discover` into:
 - ChatGPT web
 - Claude web
 
+## GitHub Links
+
+Main repo:
+
+```text
+https://github.com/karthikeyanV2K/Theory-Of-Hallucation
+```
+
+Raw browser activation for Claude.com / ChatGPT.com:
+
+```text
+https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/portable-plugin-pack/browser/discover-web-activation.md
+```
+
+Raw core protocol:
+
+```text
+https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/discover-agent-modes/lib/discovery_core.md
+```
+
 ## Codex
 
 Use the local Codex plugin:
