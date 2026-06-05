@@ -1,0 +1,20 @@
+{
+  "name": "discovery-local",
+  "interface": {
+    "displayName": "Discovery Local"
+  },
+  "plugins": [
+    {
+      "name": "discovery-mode",
+      "source": {
+        "source": "local",
+        "path": "./plugins/discovery-mode"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

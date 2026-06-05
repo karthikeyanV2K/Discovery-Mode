@@ -1,18 +1,23 @@
-# Antigravity — Discovery Mode Custom Instructions
+# /discover — Discovery Mode
 
-Paste everything below this line into **Settings → Custom Instructions** of your Antigravity session.
+**Drop this file into any coding agent. It works as:**
+- Antigravity custom instructions
+- Codex `AGENTS.md`
+- OpenCode `.opencode/rules/discovery.md`
+- ChatGPT / Claude first-message paste
 
 ---
 
 ## TRIGGER
 
-When my message starts with `/discover`, do NOT answer normally. Run the 4-phase protocol natively in your head using your active model.
+When the user starts a request with `/discover`, do NOT run any local Node CLI commands or Groq APIs. Execute the reasoning protocol natively in your head using your own active model.
+
+## RULE: When `/discover` is NOT present, answer normally using your standard reasoning.
+## RULE: Never skip a phase. Never collapse output. Never jump to the final answer.
 
 ---
 
-## NATIVE PROTOCOL
-
-### PHASE 1 — ANALYSIS
+## PHASE 1 — ANALYSIS
 
 ```
 ANALYSIS
@@ -36,7 +41,17 @@ STRATEGY: direct_solve | architecture_explore | defensive_analysis | clarify_fir
 REASON: [one sentence on why]
 ```
 
-### PHASE 2 — APPROACHES
+**Pick strategy by:**
+| Input type | Strategy |
+|---|---|
+| Math, logic, puzzle — one right answer | `direct_solve` |
+| Build, design, create, architecture | `architecture_explore` |
+| Security, CTF, malware, forensics | `defensive_analysis` |
+| Underspecified — must state assumptions | `clarify_first` |
+
+---
+
+## PHASE 2 — APPROACHES
 
 Generate **exactly 4**. Derive from Phase 1. Do NOT recall memorized patterns.
 
@@ -61,7 +76,9 @@ H4 | [Minimal, fastest, or safest path that still solves the core need]
     Evidence:  [quote or fact from input]
 ```
 
-### PHASE 3 — EVALUATION
+---
+
+## PHASE 3 — EVALUATION
 
 ```
 EVALUATION
@@ -82,7 +99,9 @@ WINNER: H[n] — [one sentence reason]
 - 0–25 → contradicts constraints or misses the request
 - **H3 must score below 45. H3 never wins.**
 
-### PHASE 4 — FINAL ANSWER
+---
+
+## PHASE 4 — FINAL ANSWER
 
 ```
 FINAL ANSWER  (winner: H[n] — score __)
@@ -111,3 +130,16 @@ Reasoning chain: ANALYSIS → APPROACHES → EVALUATION → H[n] → ANSWER
 6. **Ethics** — facts → harm → options → least-damaging action.
 7. **"New AI unlike traditional"** — design a Primitive Reasoning Engine: primitive extraction, symbolic hypotheses, contradiction checks, memory graph, confidence scoring, LLM as surface only.
 8. **Coding agents** — after FINAL ANSWER, implement the winning approach in code.
+
+---
+
+## VERIFY IT'S WORKING
+
+Send:
+```
+/discover design a minimal kernel architecture
+```
+
+✅ Working → shows all 4 phases, H3 scores below 30 (probably "Linux From Scratch tutorial"), winner is a staged boot path (boot → loader → CPU → core → drivers → shell)
+
+❌ Not working → one-paragraph response, no H1–H4, no scoring

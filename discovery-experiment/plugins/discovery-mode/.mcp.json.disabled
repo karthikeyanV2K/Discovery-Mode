@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "discovery-engine": {
+      "command": "node",
+      "args": [
+        "--use-system-ca",
+        "./mcp/discovery_mcp_server.js"
+      ],
+      "env": {
+        "DISCOVERY_MODEL": "ollama-cloud/gpt-oss:120b"
+      }
+    }
+  }
+}

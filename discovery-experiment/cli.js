@@ -11,12 +11,17 @@ const DEFAULT_MODEL = process.env.DISCOVERY_MODEL || 'ollama-cloud/gpt-oss:120b'
 async function main() {
   const args = process.argv.slice(2);
   const model = readOption(args, '--model') || DEFAULT_MODEL;
+  const jsonMode = args.includes('--json');
   const prompt = normalizeDiscoverInput(readPromptArg(args));
   const prompts = await promptLoader.loadAll();
 
   if (prompt) {
     const result = await discoveryMode.run(prompt, model, prompts);
-    printDiscoveryResult(prompt, model, result);
+    if (jsonMode) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      printDiscoveryResult(prompt, model, result);
+    }
     return;
   }
 
@@ -73,8 +78,8 @@ function readOption(args, name) {
 function readPromptArg(args) {
   const filtered = [];
   for (let i = 0; i < args.length; i += 1) {
-    if (args[i] === '--model') {
-      i += 1;
+    if (args[i] === '--model' || args[i] === '--json') {
+      if (args[i] === '--model') i += 1; // skip next value too
       continue;
     }
     filtered.push(args[i]);

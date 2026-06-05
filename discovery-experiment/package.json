@@ -4,6 +4,10 @@
   "description": "Discovery Mode vs Standard Mode LLM experiment",
   "main": "server.js",
   "type": "commonjs",
+  "bin": {
+    "discovery-mode": "./cli.js",
+    "discovery-mcp": "./plugins/discovery-mode/mcp/discovery_mcp_server.js"
+  },
   "scripts": {
     "start": "node --use-system-ca cli.js",
     "chat": "node --use-system-ca cli.js",

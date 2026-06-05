@@ -6,13 +6,18 @@
     "name": "Theory Of Hallucination"
   },
   "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Discovery Mode",
-    "shortDescription": "Adds /discover structured reasoning.",
-    "longDescription": "Discovery Mode adds a /discover activation mode to Codex. It forces uncertainty analysis, four approaches, scoring, and a complete final answer instead of a default memorized response.",
+    "shortDescription": "Adds /discover with the local Discovery engine.",
+    "longDescription": "Discovery Mode adds a /discover activation mode to Codex backed by the local Discovery engine. It runs uncertainty analysis, default-pattern detection, four approaches, validation scoring, and a complete final answer instead of a default memorized response.",
     "developerName": "Theory Of Hallucination",
     "category": "Productivity",
-    "capabilities": ["reasoning", "coding-agents", "prompt-mode"],
-    "defaultPrompt": "/discover design a minimal kernel architecture"
+    "capabilities": ["reasoning", "coding-agents", "mcp", "prompt-mode"],
+    "defaultPrompt": [
+      "/discover design a minimal kernel architecture",
+      "/discover analyze an unknown APK defensively",
+      "/discover create a non-traditional AI model"
+    ]
   }
 }

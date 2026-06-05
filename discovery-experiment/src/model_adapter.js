@@ -329,7 +329,7 @@ function extractText(model, data) {
       .map((item) => item.text)
       .join('\n');
   }
-  if (model === 'groq-free') {
+  if (GROQ_MODELS[model]) {
     return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
   }
   if (model === 'gemini-free') {

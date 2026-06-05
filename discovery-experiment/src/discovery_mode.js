@@ -116,15 +116,7 @@ async function run(input, model, prompts) {
     hypotheses,
     validations: parsed.validations,
     winner_id: parsed.winner_id,
-    final_answer: shouldUseProjectAiArchitectureAnswer(input)
-      ? buildProjectAiArchitectureAnswer(input)
-      : shouldUsePureAssemblyKernelAnswer(input)
-        ? buildPureAssemblyKernelAnswer(input)
-        : shouldUseWorkplaceEthicsAnswer(input)
-          ? buildWorkplaceEthicsAnswer(input, uncertainty)
-          : shouldUseCtfCookieAnswer(input)
-            ? buildCtfCookieAnswer(input, uncertainty)
-      : parsed.final_answer,
+    final_answer: resolveStaticAnswer(input, uncertainty, parsed.final_answer),
     confidence: parsed.confidence,
     correct: null,
     error: null,
@@ -134,6 +126,7 @@ async function run(input, model, prompts) {
 
 function applyDeterministicWinnerGuards(input, hypotheses, parsed) {
   if (shouldUseProjectAiArchitectureAnswer(input)) {
+    console.warn('[discovery:guard] AI-architecture guard fired — forcing Primitive Reasoning Engine answer.');
     return applyPreferredHypothesisGuard({
       input,
       hypotheses,
@@ -147,6 +140,7 @@ function applyDeterministicWinnerGuards(input, hypotheses, parsed) {
   }
 
   if (shouldUseWorkplaceEthicsAnswer(input)) {
+    console.warn('[discovery:guard] Workplace-ethics guard fired — forcing bounded ethics framework answer.');
     return applyPreferredHypothesisGuard({
       input,
       hypotheses,
@@ -160,6 +154,7 @@ function applyDeterministicWinnerGuards(input, hypotheses, parsed) {
   }
 
   if (shouldUseCtfCookieAnswer(input)) {
+    console.warn('[discovery:guard] CTF-cookie guard fired — forcing safe scoped analysis answer.');
     return applyPreferredHypothesisGuard({
       input,
       hypotheses,
@@ -197,6 +192,7 @@ function applyPreferredHypothesisGuard({ hypotheses, parsed, matcher, minScore, 
       })
     : parsed.validations;
 
+  console.warn(`[discovery:guard] Winner overridden: id=${preferred.id}, minScore=${minScore}, minConfidence=${minConfidence}.`);
   return {
     ...parsed,
     validations,
@@ -235,16 +231,34 @@ function extractJson(text) {
   const firstBracket = source.indexOf('[');
 
   let start = -1;
+  let opening = '';
   let closing = '';
   if (firstBrace === -1 && firstBracket === -1) return source.trim();
-  if (firstBrace === -1) { start = firstBracket; closing = ']'; }
-  else if (firstBracket === -1) { start = firstBrace; closing = '}'; }
-  else if (firstBrace < firstBracket) { start = firstBrace; closing = '}'; }
-  else { start = firstBracket; closing = ']'; }
+  if (firstBrace === -1) { start = firstBracket; opening = '['; closing = ']'; }
+  else if (firstBracket === -1) { start = firstBrace; opening = '{'; closing = '}'; }
+  else if (firstBrace < firstBracket) { start = firstBrace; opening = '{'; closing = '}'; }
+  else { start = firstBracket; opening = '['; closing = ']'; }
 
-  const end = source.lastIndexOf(closing);
-  if (end === -1 || end < start) return source.trim();
+  // Walk forward counting brackets to find the true matching close,
+  // correctly handling nested structures and string literals.
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  let end = -1;
+  for (let i = start; i < source.length; i++) {
+    const ch = source[i];
+    if (escape) { escape = false; continue; }
+    if (ch === '\\' && inString) { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === opening) depth++;
+    if (ch === closing) {
+      depth--;
+      if (depth === 0) { end = i; break; }
+    }
+  }
 
+  if (end === -1) return source.trim();
   return source.slice(start, end + 1).trim();
 }
 
@@ -471,9 +485,68 @@ function parseCrtProblem(input) {
 
 function solveCrtBySearch(equations) {
   const period = equations.reduce((product, eq) => product * eq.modulus, 1);
+  // For large search spaces, use Garner's CRT construction to avoid
+  // blocking the event loop on a long brute-force loop.
+  if (period > 100_000) {
+    return solveCrtByGarner(equations, period);
+  }
   for (let value = 1; value <= period; value += 1) {
     if (equations.every((eq) => value % eq.modulus === eq.remainder % eq.modulus)) {
       return { value, period };
+    }
+  }
+  return null;
+}
+
+/**
+ * Modular multiplicative inverse via the extended Euclidean algorithm.
+ * Returns x such that a*x ≡ 1 (mod m), or null if gcd(a, m) ≠ 1.
+ */
+function modInverse(a, m) {
+  let [r, nr] = [m, ((a % m) + m) % m];
+  let [s, ns] = [0, 1];
+  while (nr !== 0) {
+    const q = Math.floor(r / nr);
+    [r, nr] = [nr, r - q * nr];
+    [s, ns] = [ns, s - q * ns];
+  }
+  if (r !== 1) return null; // a and m are not coprime — no inverse exists.
+  return ((s % m) + m) % m;
+}
+
+/**
+ * CRT construction for pairwise coprime moduli (O(n), non-blocking).
+ * Falls back to a capped brute-force search when moduli share factors.
+ */
+function solveCrtByGarner(equations, period) {
+  try {
+    const M = equations.reduce((prod, eq) => prod * eq.modulus, 1);
+    let x = 0;
+    for (const eq of equations) {
+      const Mi = M / eq.modulus;
+      const yi = modInverse(Mi, eq.modulus);
+      if (yi === null) {
+        console.warn('[discovery:crt] Non-coprime moduli — falling back to capped brute-force search (limit 1 000 000).');
+        return solveCrtCapped(equations);
+      }
+      x += eq.remainder * Mi * yi;
+    }
+    const value = ((x % M) + M) % M || M; // Ensure positive; use M if result is 0.
+    // Verify all congruences before returning.
+    if (!equations.every((eq) => value % eq.modulus === eq.remainder % eq.modulus)) return null;
+    return { value, period: M };
+  } catch (err) {
+    console.warn('[discovery:crt] Garner solver error:', err.message);
+    return null;
+  }
+}
+
+/** Safety-net brute-force search capped at 1 000 000 iterations. */
+function solveCrtCapped(equations) {
+  const cap = 1_000_000;
+  for (let value = 1; value <= cap; value += 1) {
+    if (equations.every((eq) => value % eq.modulus === eq.remainder % eq.modulus)) {
+      return { value, period: cap };
     }
   }
   return null;
@@ -571,20 +644,39 @@ function buildFallbackHypotheses(input, rawText, uncertainty = buildFallbackUnce
   ];
 }
 
-function buildFallbackFinalAnswer(input, winner, uncertainty, modelAnswer = null) {
+/**
+ * Central resolver for pre-built domain-specific answers.
+ * Logs a warning every time a static answer overrides the model's output,
+ * making it visible in CI and local runs whenever the bypass fires.
+ * Set DISCOVERY_NO_STATIC=1 to disable all static-answer overrides.
+ */
+function resolveStaticAnswer(input, uncertainty, fallback) {
+  if (process.env.DISCOVERY_NO_STATIC === '1') return fallback;
   if (shouldUseProjectAiArchitectureAnswer(input)) {
+    console.warn('[discovery:static-answer] Pre-built AI architecture answer returned.');
     return buildProjectAiArchitectureAnswer(input);
   }
   if (shouldUsePureAssemblyKernelAnswer(input)) {
+    console.warn('[discovery:static-answer] Pre-built assembly kernel answer returned.');
     return buildPureAssemblyKernelAnswer(input);
   }
   if (shouldUseWorkplaceEthicsAnswer(input)) {
+    console.warn('[discovery:static-answer] Pre-built workplace ethics answer returned.');
     return buildWorkplaceEthicsAnswer(input, uncertainty);
   }
   if (shouldUseCtfCookieAnswer(input)) {
+    console.warn('[discovery:static-answer] Pre-built CTF cookie answer returned.');
     return buildCtfCookieAnswer(input, uncertainty);
   }
-  return modelAnswer || buildDiscoveryAnswer(input, winner, uncertainty);
+  return fallback;
+}
+
+function buildFallbackFinalAnswer(input, winner, uncertainty, modelAnswer = null) {
+  return resolveStaticAnswer(
+    input,
+    uncertainty,
+    modelAnswer || buildDiscoveryAnswer(input, winner, uncertainty),
+  );
 }
 
 function buildFallbackValidations(hypotheses) {
