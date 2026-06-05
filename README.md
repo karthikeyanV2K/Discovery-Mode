@@ -1,6 +1,8 @@
-# Discovery Mode — `/discover` for Any Coding Agent
+# Theory of Hallucination — Discovery Mode
 
-> Stop your AI from giving the canned memorized answer. `/discover` forces structured, uncertainty-first reasoning on every request.
+> Portable `/discover` reasoning mode for any coding agent or web chat.
+
+Discovery Mode prevents an AI from jumping straight to its most common memorized answer. Instead it forces structured, uncertainty-first reasoning:
 
 ```
 ANALYSIS → APPROACHES (H1–H4) → EVALUATION → FINAL ANSWER
