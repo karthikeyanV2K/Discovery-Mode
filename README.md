@@ -10,45 +10,41 @@ H3 is always the default AI answer. It must score below 45. It never wins.
 
 ---
 
-## Pick Your Agent — Run One Command
+## Pick Your Agent — One Command Setup
+
+> **Windows users:** Run all commands in **PowerShell** (not CMD).  
+> Right-click Start → "Windows PowerShell" or search "PowerShell" in Start menu.
 
 ---
 
 ### 🟣 Antigravity IDE
 
-**Windows (PowerShell):**
+**PowerShell:**
 ```powershell
-$url = "https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md"
-$content = (Invoke-WebRequest -Uri $url -UseBasicParsing).Content
-Add-Content -Path "$env:USERPROFILE\.gemini\GEMINI.md" -Value "`n`n$content"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md" -OutFile "$env:USERPROFILE\.gemini\GEMINI.md" -UseBasicParsing
 ```
 
 **Mac / Linux:**
 ```bash
-curl -s https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md \
-  >> ~/.gemini/GEMINI.md
+curl -s https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md >> ~/.gemini/GEMINI.md
 ```
 
-Restart Antigravity. Then type `/discover <your task>`.
+Restart Antigravity. Type `/discover <your task>`.
 
 ---
 
 ### 🔵 OpenCode
 
-Run this inside your project folder:
+Run inside your project folder.
 
-```bash
-mkdir -p .opencode/rules
-curl -o .opencode/rules/discovery-mode.md \
-  https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/.opencode/rules/discovery-mode.md
+**PowerShell:**
+```powershell
+mkdir -Force .opencode\rules; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/.opencode/rules/discovery-mode.md" -OutFile ".opencode\rules\discovery-mode.md"
 ```
 
-**Windows (PowerShell):**
-```powershell
-New-Item -ItemType Directory -Force -Path ".opencode\rules"
-Invoke-WebRequest `
-  -Uri "https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/.opencode/rules/discovery-mode.md" `
-  -OutFile ".opencode\rules\discovery-mode.md"
+**Mac / Linux:**
+```bash
+mkdir -p .opencode/rules && curl -o .opencode/rules/discovery-mode.md https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/.opencode/rules/discovery-mode.md
 ```
 
 Open OpenCode in that project. Type `/discover <your task>`.
@@ -57,18 +53,16 @@ Open OpenCode in that project. Type `/discover <your task>`.
 
 ### 🟡 Codex (OpenAI CLI)
 
-Run this inside your project folder:
+Run inside your project folder.
 
-```bash
-curl -o AGENTS.md \
-  https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/AGENTS.md
+**PowerShell:**
+```powershell
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/AGENTS.md" -OutFile "AGENTS.md"
 ```
 
-**Windows (PowerShell):**
-```powershell
-Invoke-WebRequest `
-  -Uri "https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/AGENTS.md" `
-  -OutFile "AGENTS.md"
+**Mac / Linux:**
+```bash
+curl -o AGENTS.md https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/AGENTS.md
 ```
 
 Codex reads `AGENTS.md` automatically from the project root.
@@ -77,60 +71,48 @@ Codex reads `AGENTS.md` automatically from the project root.
 
 ### 🟠 Cursor
 
-Run this inside your project folder:
+Run inside your project folder.
 
-```bash
-mkdir -p .cursor/rules
-curl -o .cursor/rules/discovery-mode.mdc \
-  https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md
+**PowerShell:**
+```powershell
+mkdir -Force .cursor\rules; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md" -OutFile ".cursor\rules\discovery-mode.mdc"
 ```
 
-**Windows (PowerShell):**
-```powershell
-New-Item -ItemType Directory -Force -Path ".cursor\rules"
-Invoke-WebRequest `
-  -Uri "https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md" `
-  -OutFile ".cursor\rules\discovery-mode.mdc"
+**Mac / Linux:**
+```bash
+mkdir -p .cursor/rules && curl -o .cursor/rules/discovery-mode.mdc https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md
 ```
 
 Restart Cursor. Type `/discover <your task>` in the agent chat.
 
 ---
 
-### 🔴 VS Code (Cline / Roo Code / Continue)
+### 🔴 VS Code (GitHub Copilot / Cline / Roo Code)
 
-Run this inside your project folder:
+Run inside your project folder.
 
-```bash
-mkdir -p .github
-curl -o .github/copilot-instructions.md \
-  https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md
-```
-
-**Windows (PowerShell):**
+**PowerShell:**
 ```powershell
-New-Item -ItemType Directory -Force -Path ".github"
-Invoke-WebRequest `
-  -Uri "https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md" `
-  -OutFile ".github\copilot-instructions.md"
+mkdir -Force .github; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md" -OutFile ".github\copilot-instructions.md"
 ```
 
-Or paste the raw file contents into your extension's **Custom Instructions** field directly.
+**Mac / Linux:**
+```bash
+mkdir -p .github && curl -o .github/copilot-instructions.md https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md
+```
 
 ---
 
-### 🌐 ChatGPT / Claude Web (no install)
+### 🌐 ChatGPT / Claude Web (no install needed)
 
-1. Open this URL and copy all the text:
-
+1. Open this link and copy all the text:
    ```
    https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md
    ```
 
 2. Paste it as your **first message** in the chat.
 
-3. Wait for the agent to confirm, then type:
-
+3. Then type:
    ```
    /discover <your task>
    ```
@@ -145,9 +127,9 @@ Send this to your agent after setup:
 /discover design a minimal kernel architecture
 ```
 
-**✅ Working** — you see all 4 phases, H3 scores below 30 (something like "Linux From Scratch tutorial"), winner is a staged boot architecture (boot → loader → CPU init → kernel core → drivers → shell).
+**✅ Working** — you see all 4 phases, H3 scores below 30 (something like "Linux From Scratch tutorial"), winner is a staged boot architecture.
 
-**❌ Not working** — you get a single paragraph with no H1–H4, no scoring. Check the file was saved correctly and restart the agent.
+**❌ Not working** — you get a single paragraph with no H1–H4, no scoring. Check the file was saved and restart the agent.
 
 ---
 
@@ -157,10 +139,10 @@ Every `/discover <task>` runs four structured phases:
 
 | Phase | What Happens |
 |---|---|
-| **ANALYSIS** | Extracts known facts, unknowns, constraints, speculation risk, and names the default canned answer to avoid |
-| **APPROACHES** | Generates exactly 4 hypotheses (H1 best, H2 alternative, H3 the canned AI answer, H4 minimal path) |
-| **EVALUATION** | Scores H1–H4 from 0–100. H3 < 45. Names the winner. |
-| **FINAL ANSWER** | Full code / architecture / math based on the winner only — never a blend |
+| **ANALYSIS** | Extracts known facts, unknowns, constraints, and names the canned answer to avoid |
+| **APPROACHES** | Generates exactly 4 hypotheses — H1 best, H2 alternative, H3 the canned AI answer, H4 minimal path |
+| **EVALUATION** | Scores H1–H4 from 0–100. H3 must score below 45 and never wins. |
+| **FINAL ANSWER** | Full code / architecture / math based on the winner only |
 
 Without `/discover`, your agent answers normally. The mode only activates on demand.
 
@@ -168,14 +150,18 @@ Without `/discover`, your agent answers normally. The mode only activates on dem
 
 ## Advanced: Local Engine CLI
 
-If you want to run the full reasoning engine locally (not just agent instructions):
+Run the full reasoning engine locally (requires Node.js):
 
 ```bash
 git clone https://github.com/karthikeyanV2K/Theory-Of-Hallucation.git
 cd Theory-Of-Hallucation/discovery-experiment
 npm install
 cp .env.example .env
-# Edit .env and add your GROQ_API_KEY or GEMINI_API_KEY
+```
+
+Edit `.env` and add your `GROQ_API_KEY` or `GEMINI_API_KEY`, then:
+
+```bash
 node cli.js --model groq-free "/discover design a minimal kernel architecture"
 ```
 
@@ -183,7 +169,7 @@ Available models: `groq-free` · `gemini-free` · `ollama/llama3.2` · `openai/g
 
 ---
 
-## Files in This Repo
+## Repo Structure
 
 ```
 discovery-experiment/
