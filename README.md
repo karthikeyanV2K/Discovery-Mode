@@ -37,19 +37,21 @@ Restart Antigravity. Type `/discover <your task>`.
 
 ### 🔵 OpenCode
 
-Run inside your project folder.
+Installs **globally** — works in every project automatically.
 
-**PowerShell:**
+> ⚠️ **Use Code mode, not Plan mode.** In Plan mode, OpenCode forces tool calls which override the Discovery protocol. Switch to **Code** mode before typing `/discover`.
+
+**PowerShell (global install):**
 ```powershell
-mkdir -Force .opencode\rules; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/.opencode/rules/discovery-mode.md" -OutFile ".opencode\rules\discovery-mode.md"
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode"; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md" -OutFile "$env:USERPROFILE\.config\opencode\AGENTS.md" -UseBasicParsing
 ```
 
-**Mac / Linux:**
+**Mac / Linux (global install):**
 ```bash
-mkdir -p .opencode/rules && curl -o .opencode/rules/discovery-mode.md https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/.opencode/rules/discovery-mode.md
+mkdir -p ~/.config/opencode && curl -o ~/.config/opencode/AGENTS.md https://raw.githubusercontent.com/karthikeyanV2K/Theory-Of-Hallucation/main/discovery-experiment/DISCOVERY.md
 ```
 
-Open OpenCode in that project. Type `/discover <your task>`.
+Restart OpenCode. **Switch to Code mode** (not Plan). Type `/discover <your task>`.
 
 ---
 
