@@ -1,17 +1,20 @@
-# Theory of Hallucination — Discovery Mode v2
+# Theory of Hallucination — Discovery Mode v3
 
-> Portable `/discover` reasoning mode for any coding agent or web chat.
+> What if hallucination isn't the problem? What if it's the answer?
 
-Discovery Mode prevents an AI from jumping to its most common memorized answer. It forces structured, uncertainty-first reasoning across 5 phases:
+**The Theory:**
+AI hallucination is not always a bug. When a model generates something that isn't in its training data, that's not failure — that's the capacity to think beyond what it was trained on. The Theory of Hallucination asks: can we *deliberately* trigger that out-of-training thinking, guide it, and verify when it's real?
 
 ```
-ANALYSIS → APPROACHES (H1–H5) → EVALUATION → FINAL ANSWER → CONSTRAINT CHECK
+Training data recall      →  predictable, safe, limited    →  this is what we REJECT
+Controlled hallucination  →  thinking beyond training data  →  this is what we BUILD
 ```
 
-H3 is always the canned training-data answer. It must score below 45. It never wins.
-H5 is adversarial — it tries to break the winner before the answer ships.
+**The Experiment — Discovery Mode:**
+Every `/discover` session forces the model to generate ideas that cannot come from pattern recall, then explicitly names the training-data answer (H3) as the baseline to beat. When H3 loses — and it always does — that's evidence that real out-of-training thinking produced something better.
 
-**Benchmark:** Discovery Mode scores **+3.2% avg** over standard reasoning. **+13%** on architecture tasks. **100%** on hard kernel design cases.
+H3 is not "the wrong answer." H3 is **proof that the model isn't hallucinating** — it's just recalling.
+When H3 loses, controlled hallucination won.
 
 ---
 

@@ -1,5 +1,11 @@
 # Discovery Mode — v3 (Explorer Edition)
 
+> Hallucination = thinking beyond training data. That's not the bug. That's the goal.
+
+**H3 is the non-hallucination** — the model recalling its training pattern, confident and wrong.
+**E1/E2/E4 are controlled hallucinations** — ideas that don't come from training data recall.
+When E3 loses, hallucination won.
+
 ## ⛔ DEFAULT: Answer normally
 
 Unless the user's message starts with `/discover`, answer exactly as you normally would.
